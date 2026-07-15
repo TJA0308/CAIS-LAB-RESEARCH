@@ -1,0 +1,38 @@
+Flow Response Model Summary
+===========================
+
+Task
+Predict ESP32 flow response from pump PWM and valve control states.
+
+Runs Used
+- full_cycle_run_001: 2143 rows
+- full_cycle_run_002: 1480 rows
+- full_cycle_run_003: 740 rows
+- pump_pwm_sweep_run_001: 1547 rows
+- valve_routing_run_001: 1347 rows
+
+Rows dropped for missing values: 0
+
+Features
+pump1_pwm, pump2_pwm, valve1, valve2, valve3, valve4
+
+Targets
+flow_p1, flow_p2, flow_valve1, flow_outlet
+
+Evaluation
+Leave-one-run-out cross-validation across five runs. No random row split is used.
+
+Best Model Per Held-Out Run by Average MAE
+                                                                              train_runs               test_run             model  train_rows  test_rows  mae_flow_p1  mae_flow_p2  mae_flow_valve1  mae_flow_outlet  avg_mae  avg_rmse  overall_r2
+full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_001     Random Forest        5114       2143       4.2359       2.1493           2.2557           1.4414   2.5206    5.2003      0.5634
+full_cycle_run_001 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002     Random Forest        5777       1480       1.4762       1.4310           2.2288           0.9127   1.5122    2.8409      0.8731
+full_cycle_run_001 + full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        6517        740       6.4061       4.4068           1.7301           2.2870   3.7075    5.0696      0.7675
+    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001     Random Forest        5710       1547       2.3184       3.2405           0.2099           0.5833   1.5880    3.6069      0.5894
+   full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001     Random Forest        5910       1347       0.1455       0.2048           2.4376           2.6336   1.3554    2.4257      0.5783
+
+Average Summary By Model
+            model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
+    Random Forest        2.1568         3.9917           0.6514
+Linear Regression        2.5965         3.9838           0.6607
+ Ridge Regression        2.5965         3.9836           0.6607
+   Mean Predictor        6.7658         8.1716          -0.2193

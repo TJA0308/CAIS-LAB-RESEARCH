@@ -1,0 +1,8 @@
+run_name,stage,start_s,end_s,duration_s,esp32_rows,arduino_rows,pump1_on_percent,pump2_on_percent,avg_pump1_pwm,avg_pump2_pwm,max_pump1_pwm,max_pump2_pwm,valve1_on_percent,valve2_on_percent,valve3_on_percent,valve4_on_percent,avg_flow_p1,avg_flow_p2,avg_flow_valve1,avg_flow_outlet,max_flow_p1,max_flow_p2,max_flow_valve1,max_flow_outlet,tower_change,treated_change,raw_change,avg_tower,avg_treated,avg_raw,sensor_error_count,sensor_error_percent,flow_after_pumps_off_count,pump1_low_flow_count,pump2_low_flow_count
+valve_routing_run_001,baseline,0,30,30,61,57,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.0,9.0,417.0,784.649,525.611,3,5.26,0,0,0
+valve_routing_run_001,valve2_route,30,75,45,90,56,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-11.0,20.0,417.0,773.151,541.442,10,17.86,0,0,0
+valve_routing_run_001,reset_1,75,95,20,40,25,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.0,7.0,417.0,766.217,555.043,8,32.0,0,0,0
+valve_routing_run_001,valve3_route,95,140,45,91,56,0.0,0.0,0.0,0.0,0.0,0.0,82.42,0.0,0.0,0.0,0.0,0.0,6.297,0.0,0.0,0.0,10.0,0.0,27.0,-10.0,12.0,432.63,752.655,566.887,6,10.71,70,0,0
+valve_routing_run_001,reset_2,140,160,20,41,25,0.0,0.0,0.0,0.0,0.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,8.146,0.0,0.0,0.0,12.0,0.0,17.0,-52.0,11.0,454.6,736.333,578.545,4,16.0,41,0,0
+valve_routing_run_001,valve4_route,160,205,45,91,57,0.0,0.0,0.0,0.0,0.0,0.0,100.0,29.67,0.0,0.0,0.0,0.0,8.484,4.0,0.0,0.0,11.0,18.0,3.0,-37.0,5.0,461.291,704.34,588.509,6,10.53,91,0,0
+valve_routing_run_001,shutdown,205,240,35,71,43,0.0,0.0,0.0,0.0,0.0,0.0,100.0,1.41,40.85,14.08,0.0,0.0,7.93,11.324,0.0,0.0,10.0,20.0,27.0,-4.0,0.0,479.395,695.667,590.0,3,6.98,71,0,0

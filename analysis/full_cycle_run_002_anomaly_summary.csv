@@ -1,0 +1,6 @@
+rule,source,count,source_rows,percent_of_source_rows
+flow_after_pumps_off,esp32,299,1480,20.2
+sensor_error_or_missing,arduino,86,844,10.19
+pump1_on_low_flow,esp32,6,1480,0.41
+possible_sensor_stuck,arduino,5,844,0.59
+pump2_on_low_flow,esp32,3,1480,0.2

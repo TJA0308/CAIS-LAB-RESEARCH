@@ -1,0 +1,7 @@
+run_name,source,timestamp,rule,details
+config_test_001,esp32,98.23432800000161,pump1_on_low_flow,"pump1_pwm=100.0, flow_p1=0.0"
+config_test_001,esp32,98.72068900000303,pump1_on_low_flow,"pump1_pwm=100.0, flow_p1=0.0"
+config_test_001,esp32,99.2245,pump1_on_low_flow,"pump1_pwm=100.0, flow_p1=0.0"
+config_test_001,esp32,316.9105380000025,flow_after_pumps_off,"flow_p1=3.0, flow_p2=0.0, flow_valve1=6.0, flow_outlet=0.0"
+config_test_001,esp32,317.40890200000257,flow_after_pumps_off,"flow_p1=2.0, flow_p2=0.0, flow_valve1=5.0, flow_outlet=0.0"
+config_test_001,esp32,317.8857119999975,flow_after_pumps_off,"flow_p1=2.0, flow_p2=0.0, flow_valve1=5.0, flow_outlet=0.0"

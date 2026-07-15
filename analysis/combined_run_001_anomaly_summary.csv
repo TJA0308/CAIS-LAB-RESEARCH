@@ -1,0 +1,5 @@
+rule,source,count
+sensor_error_or_missing,arduino,497
+possible_sensor_stuck,arduino,5
+flow_after_pumps_off,esp32,3
+pump1_on_low_flow,esp32,3

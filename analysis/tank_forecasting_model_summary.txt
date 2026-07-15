@@ -1,0 +1,33 @@
+Tank Forecasting Model Summary
+=============================
+
+Proof-of-concept regression models predict Arduino tank readings 10 seconds into the future from merged control, flow, and tank state data.
+
+Runs used
+- full_cycle_run_002: 724 modeling rows
+- full_cycle_run_003: 356 modeling rows
+- pump_pwm_sweep_run_001: 753 modeling rows
+- valve_routing_run_001: 654 modeling rows
+
+Features
+pump1_pwm, pump2_pwm, valve1, valve2, valve3, valve4, flow_p1, flow_p2, flow_valve1, flow_outlet, tower, treated, raw
+
+Targets
+tower_future (+10s), treated_future (+10s), raw_future (+10s)
+
+Evaluation
+Leave-one-run-out validation across available merged runs only. No random row split is used. These results are exploratory and should not be treated as production accuracy.
+
+Best model per held-out run by average MAE
+                                                         train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
+full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002 Linear Regression        1763        724    30.4544      34.9347   3.6928  23.0273   32.9160      0.9333
+full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        2131        356    10.7408      10.9977   3.4780   8.4055   26.8321      0.5658
+    full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        1734        753    18.4442       8.5342   4.0435  10.3407   12.7928      0.9044
+   full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001 Linear Regression        1833        654    58.0144      26.5604   2.6011  29.0586   36.4379      0.6222
+
+Average summary by model
+            model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
+Linear Regression       17.7080        27.2447           0.7564
+ Ridge Regression       17.9630        27.4015           0.7554
+    Random Forest       65.2134        77.0891          -0.1972
+   Mean Predictor      122.8175       135.3889          -3.2921

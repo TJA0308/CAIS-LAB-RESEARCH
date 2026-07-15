@@ -1,0 +1,25 @@
+Run Report: valve_routing_run_001
+========================================
+
+ESP32/MATLAB Summary
+-------------------------
+Rows: 1347
+Max Pump 1 PWM: 0.0
+Max Pump 2 PWM: 0.0
+Max Flow Pump 1: 0.0
+Max Flow Pump 2: 0.0
+Max Flow Valve 1: 12.0
+Max Flow Outlet: 22.0
+
+Arduino Tank Sensor Summary
+------------------------------
+Rows: 959
+Tower tank sensor min/max/avg: 417.0 / 738.0 / 586.77
+Treated tank sensor min/max/avg: 613.0 / 811.0 / 699.58
+Raw tank sensor min/max/avg: 521.0 / 644.0 / 603.96
+
+Anomaly/Data-Quality Summary
+--------------------------------
+flow_after_pumps_off (esp32): 1062 (78.84% of esp32 rows)
+sensor_error_or_missing (arduino): 117 (12.32% of arduino rows)
+possible_sensor_stuck (arduino): 1 (0.11% of arduino rows)

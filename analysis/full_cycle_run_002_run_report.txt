@@ -1,0 +1,27 @@
+Run Report: full_cycle_run_002
+========================================
+
+ESP32/MATLAB Summary
+-------------------------
+Rows: 1480
+Max Pump 1 PWM: 200.0
+Max Pump 2 PWM: 200.0
+Max Flow Pump 1: 12.0
+Max Flow Pump 2: 52.0
+Max Flow Valve 1: 11.0
+Max Flow Outlet: 17.0
+
+Arduino Tank Sensor Summary
+------------------------------
+Rows: 844
+Tower tank sensor min/max/avg: 552.0 / 722.0 / 693.06
+Treated tank sensor min/max/avg: 81.0 / 747.0 / 228.44
+Raw tank sensor min/max/avg: 490.0 / 559.0 / 523.31
+
+Anomaly/Data-Quality Summary
+--------------------------------
+flow_after_pumps_off (esp32): 299 (20.2% of esp32 rows)
+sensor_error_or_missing (arduino): 86 (10.19% of arduino rows)
+pump1_on_low_flow (esp32): 6 (0.41% of esp32 rows)
+possible_sensor_stuck (arduino): 5 (0.59% of arduino rows)
+pump2_on_low_flow (esp32): 3 (0.2% of esp32 rows)
