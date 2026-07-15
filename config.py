@@ -16,8 +16,8 @@ DB_NAME = str(DB_DIR / "water_testbed.db")
 # Current experiment/run
 # Change these two lines before every new run
 # -------------------------------
-RUN_NAME = "full_cycle_run_004"
-MAT_FILE = str(RAW_DATA_DIR / "full_cycle_run_004.mat")  # change if needed
+RUN_NAME = "pump_pwm_sweep_run_002"
+MAT_FILE = str(RAW_DATA_DIR / "pump_pwm_sweep_run_002.mat")  # change if needed
 
 # -------------------------------
 # Arduino UNO serial settings

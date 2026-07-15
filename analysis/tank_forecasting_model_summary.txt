@@ -8,6 +8,7 @@ Runs used
 - full_cycle_run_003: 355 modeling rows
 - full_cycle_run_004: 959 modeling rows
 - pump_pwm_sweep_run_001: 753 modeling rows
+- pump_pwm_sweep_run_002: 869 modeling rows
 - valve_routing_run_001: 654 modeling rows
 
 Features
@@ -20,16 +21,17 @@ Evaluation
 Leave-one-run-out validation across available merged runs only. No random row split is used. These results are exploratory and should not be treated as production accuracy.
 
 Best model per held-out run by average MAE
-                                                                              train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
-full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002 Linear Regression        2721        717     5.6247      17.2847   3.0572   8.6555   21.0242      0.9652
-full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        3083        355     7.5506       8.4975   3.2323   6.4268   21.1477      0.7560
-full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_004 Linear Regression        2479        959     7.5673       6.8708   3.0759   5.8380   12.1633      0.9209
-    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        2685        753     8.0078       5.0585   2.4161   5.1608    8.2290      0.9642
-   full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001  valve_routing_run_001 Linear Regression        2784        654     6.6732      15.1692   2.0635   7.9686   12.6184      0.9507
+                                                                                                       train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
+full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_002  Ridge Regression        3590        717     6.7170      11.1769   2.8793   6.9244   21.1092      0.9649
+full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_003 Linear Regression        3952        355     7.2782       8.7357   3.2111   6.4083   21.1758      0.7562
+full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_004 Linear Regression        3348        959     9.2896       6.2425   3.0425   6.1915   12.1595      0.9193
+    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_002 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        3554        753     8.0104       3.5840   2.3913   4.6619    7.6009      0.9676
+    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001 pump_pwm_sweep_run_002  Ridge Regression        3438        869    16.0414       5.1336   1.9919   7.7223   13.0218      0.9667
+   full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002  valve_routing_run_001 Linear Regression        3653        654     9.3742      16.9577   1.7919   9.3746   13.8710      0.9443
 
 Average summary by model
             model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
-Linear Regression        6.8099        15.0365           0.9114
- Ridge Regression        6.8852        15.0719           0.9112
-    Random Forest       52.7974        64.9600           0.0231
-   Mean Predictor      108.8549       121.3505          -3.2893
+Linear Regression        6.8808        14.8225           0.9198
+ Ridge Regression        6.8954        14.8338           0.9197
+    Random Forest       57.6203        69.1376          -0.4018
+   Mean Predictor      110.0834       121.8106          -3.1754

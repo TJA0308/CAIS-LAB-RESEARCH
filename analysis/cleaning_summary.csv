@@ -4,13 +4,13 @@ esp32_flow_response,full_cycle_run_002,1480,1471,9,0.61,dropped_missing=0; dropp
 esp32_flow_response,full_cycle_run_003,740,730,10,1.35,dropped_missing=0; dropped_low_flow=10
 esp32_flow_response,full_cycle_run_004,1967,1950,17,0.86,dropped_missing=0; dropped_low_flow=17
 esp32_flow_response,pump_pwm_sweep_run_001,1547,1091,456,29.48,dropped_missing=0; dropped_low_flow=456
-esp32_flow_response,pump_pwm_sweep_run_002,0,0,0,0.0,run not present in esp32_matlab_data
+esp32_flow_response,pump_pwm_sweep_run_002,1784,1462,322,18.05,dropped_missing=0; dropped_low_flow=322
 esp32_flow_response,valve_routing_run_001,1347,1347,0,0.0,dropped_missing=0; dropped_low_flow=0
 esp32_flow_response,valve_routing_run_002,0,0,0,0.0,run not present in esp32_matlab_data
 tank_forecasting,full_cycle_run_002,734,717,17,2.32,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=7
 tank_forecasting,full_cycle_run_003,366,355,11,3.01,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=1
 tank_forecasting,full_cycle_run_004,971,959,12,1.24,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=2
 tank_forecasting,pump_pwm_sweep_run_001,763,753,10,1.31,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=0
-tank_forecasting,pump_pwm_sweep_run_002,0,0,0,0.0,merged CSV not present
+tank_forecasting,pump_pwm_sweep_run_002,879,869,10,1.14,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=0
 tank_forecasting,valve_routing_run_001,664,654,10,1.51,time_column=t_seconds; dropped_missing=10; dropped_extreme_jumps=0
 tank_forecasting,valve_routing_run_002,0,0,0,0.0,merged CSV not present

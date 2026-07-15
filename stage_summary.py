@@ -39,13 +39,12 @@ STAGE_WINDOWS = {
     ],
 
     "full_cycle_run_003": [
-    ("baseline", 0, 30),
-    ("groundwater_to_raw", 30, 90),
-    ("raw_to_treated", 90, 150),
-    ("treated_to_tower", 150, 210),
-    ("full_pathway", 210, 270),
-    ("shutdown", 270, 330),
-    
+        ("baseline", 0, 30),
+        ("groundwater_to_raw", 30, 90),
+        ("raw_to_treated", 90, 150),
+        ("treated_to_tower", 150, 210),
+        ("full_pathway", 210, 270),
+        ("shutdown", 270, 330),
     ],
 
     "valve_routing_run_001": [
@@ -80,6 +79,23 @@ STAGE_WINDOWS = {
         ("full_pathway", 600, 780),
         ("shutdown", 780, 970),
     ],
+
+    "pump_pwm_sweep_run_002": [
+        ("baseline", 0, 60),
+        ("pump1_pwm_80", 60, 130),
+        ("pump1_pwm_100", 130, 200),
+        ("pump1_pwm_140", 200, 270),
+        ("pump1_pwm_180", 270, 340),
+        ("pump1_pwm_220", 340, 410),
+        ("reset", 410, 470),
+        ("pump2_pwm_80", 470, 540),
+        ("pump2_pwm_100", 540, 610),
+        ("pump2_pwm_140", 610, 680),
+        ("pump2_pwm_180", 680, 750),
+        ("pump2_pwm_220", 750, 820),
+        ("shutdown", 820, 878),
+    ],
+
 }
 
 

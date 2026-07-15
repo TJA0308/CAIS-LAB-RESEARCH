@@ -1,0 +1,26 @@
+Run Report: pump_pwm_sweep_run_002
+========================================
+
+ESP32/MATLAB Summary
+-------------------------
+Rows: 1784
+Max Pump 1 PWM: 220.0
+Max Pump 2 PWM: 220.0
+Max Flow Pump 1: 24.0
+Max Flow Pump 2: 54.0
+Max Flow Valve 1: 0.0
+Max Flow Outlet: 0.0
+
+Arduino Tank Sensor Summary
+------------------------------
+Rows: 1104
+Tower tank sensor min/max/avg: 388.0 / 789.0 / 701.89
+Treated tank sensor min/max/avg: 380.0 / 772.0 / 436.66
+Raw tank sensor min/max/avg: 390.0 / 592.0 / 455.35
+
+Anomaly/Data-Quality Summary
+--------------------------------
+pump1_on_low_flow (esp32): 199 (11.15% of esp32 rows)
+sensor_error_or_missing (arduino): 135 (12.23% of arduino rows)
+pump2_on_low_flow (esp32): 123 (6.89% of esp32 rows)
+flow_after_pumps_off (esp32): 112 (6.28% of esp32 rows)
