@@ -18,20 +18,21 @@ Targets
 tower_future (+10s), treated_future (+10s), raw_future (+10s)
 
 Evaluation
-Leave-one-run-out validation across available merged runs only. No random row split is used. These results are exploratory and should not be treated as production accuracy.
+Leave-one-run-out validation across available merged runs only. No random row split is used. The reference baseline is persistence (future reading = current reading), not the mean predictor: over a 10s horizon the tanks change slowly, so a model must be compared against persistence to show it has learned any real dynamics. These results are exploratory and should not be treated as production accuracy.
 
 Best model per held-out run by average MAE
-                                                                                                       train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
-full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_002  Ridge Regression        3590        717     6.7170      11.1769   2.8793   6.9244   21.1092      0.9649
-full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_003 Linear Regression        3952        355     7.2782       8.7357   3.2111   6.4083   21.1758      0.7562
-full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_004 Linear Regression        3348        959     9.2896       6.2425   3.0425   6.1915   12.1595      0.9193
-    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_002 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        3554        753     8.0104       3.5840   2.3913   4.6619    7.6009      0.9676
-    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001 pump_pwm_sweep_run_002  Ridge Regression        3438        869    16.0414       5.1336   1.9919   7.7223   13.0218      0.9667
-   full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002  valve_routing_run_001 Linear Regression        3653        654     9.3742      16.9577   1.7919   9.3746   13.8710      0.9443
+                                                                                                       train_runs               test_run                   model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
+full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_002 Persistence (no change)        3590        717     2.4742       9.1381   2.5021   4.7048   20.0226      0.9657
+full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_003       Linear Regression        3952        355     7.2782       8.7357   3.2111   6.4083   21.1758      0.7562
+full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_004 Persistence (no change)        3348        959     7.1679       4.1569   4.5089   5.2779   11.9478      0.9200
+    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_002 + valve_routing_run_001 pump_pwm_sweep_run_001       Linear Regression        3554        753     8.0104       3.5840   2.3913   4.6619    7.6009      0.9676
+    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001 pump_pwm_sweep_run_002        Ridge Regression        3438        869    16.0414       5.1336   1.9919   7.7223   13.0218      0.9667
+   full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002  valve_routing_run_001 Persistence (no change)        3653        654     5.0688      13.2278   2.0856   6.7941   12.4700      0.9522
 
 Average summary by model
-            model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
-Linear Regression        6.8808        14.8225           0.9198
- Ridge Regression        6.8954        14.8338           0.9197
-    Random Forest       57.6203        69.1376          -0.4018
-   Mean Predictor      110.0834       121.8106          -3.1754
+                  model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
+Persistence (no change)        6.1005        14.9292           0.9182
+      Linear Regression        6.8808        14.8225           0.9198
+       Ridge Regression        6.8954        14.8338           0.9197
+          Random Forest       57.6203        69.1376          -0.4018
+         Mean Predictor      110.0834       121.8106          -3.1754

@@ -17,7 +17,9 @@ CLEAN_RUNS = [
     "full_cycle_run_001",
     "full_cycle_run_002",
     "full_cycle_run_003",
+    "full_cycle_run_004",
     "pump_pwm_sweep_run_001",
+    "pump_pwm_sweep_run_002",
     "valve_routing_run_001",
 ]
 
@@ -214,7 +216,7 @@ def write_summary(results, row_counts, rows_dropped):
 
         summary_file.write("Evaluation\n")
         summary_file.write(
-            "Leave-one-run-out cross-validation across five runs. "
+            f"Leave-one-run-out cross-validation across {len(CLEAN_RUNS)} runs. "
             "No random row split is used.\n\n"
         )
 

@@ -8,7 +8,9 @@ Runs Used
 - full_cycle_run_001: 2132 rows
 - full_cycle_run_002: 1471 rows
 - full_cycle_run_003: 730 rows
+- full_cycle_run_004: 1950 rows
 - pump_pwm_sweep_run_001: 1091 rows
+- pump_pwm_sweep_run_002: 1462 rows
 - valve_routing_run_001: 1347 rows
 
 Rows dropped for missing values: 0
@@ -20,19 +22,21 @@ Targets
 flow_p1, flow_p2, flow_valve1, flow_outlet
 
 Evaluation
-Leave-one-run-out cross-validation across five runs. No random row split is used.
+Leave-one-run-out cross-validation across 7 runs. No random row split is used.
 
 Best Model Per Held-Out Run by Average MAE
-                                                                              train_runs               test_run             model  train_rows  test_rows  mae_flow_p1  mae_flow_p2  mae_flow_valve1  mae_flow_outlet  avg_mae  avg_rmse  overall_r2
-full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_001     Random Forest        4639       2132       4.2917       2.1163           2.2654           1.4188   2.5231    5.1865      0.5679
-full_cycle_run_001 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002     Random Forest        5300       1471       1.4362       1.3535           2.2282           0.9048   1.4807    2.7784      0.8782
-full_cycle_run_001 + full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        6041        730       6.3170       4.0846           1.7337           2.3690   3.6261    4.9053      0.7860
-    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001     Random Forest        5680       1091       2.2333       4.1961           0.2209           0.5409   1.7978    3.9115      0.6030
-   full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001     Random Forest        5424       1347       0.1473       0.2041           2.4358           2.6298   1.3543    2.4263      0.5782
+                                                                                                                            train_runs               test_run             model  train_rows  test_rows  mae_flow_p1  mae_flow_p2  mae_flow_valve1  mae_flow_outlet  avg_mae  avg_rmse  overall_r2
+full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_001     Random Forest        8051       2132       4.7576       2.1286           2.3050           1.3750   2.6415    5.3376      0.5428
+full_cycle_run_001 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_002     Random Forest        8712       1471       0.8744       1.4958           2.0109           0.8246   1.3014    2.6340      0.8864
+full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_003 Linear Regression        9453        730       5.0040       3.9876           1.6125           1.9862   3.1476    4.4504      0.8270
+full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002 + valve_routing_run_001     full_cycle_run_004     Random Forest        8233       1950       2.3571       1.6480           1.2879           1.3885   1.6704    3.6492      0.7598
+    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_002 + valve_routing_run_001 pump_pwm_sweep_run_001     Random Forest        9092       1091       1.2309       1.5556           0.1097           0.3546   0.8127    1.9183      0.9156
+    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001 pump_pwm_sweep_run_002     Random Forest        8721       1462       2.4248       2.1416           0.1110           0.2716   1.2373    2.5857      0.8826
+   full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + pump_pwm_sweep_run_002  valve_routing_run_001     Random Forest        8836       1347       0.1805       0.3828           0.9725           2.6367   1.0431    1.8856      0.7225
 
 Average Summary By Model
             model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
-    Random Forest        2.1683         3.9945           0.6647
-Linear Regression        2.5907         3.9262           0.6851
- Ridge Regression        2.5909         3.9260           0.6851
-   Mean Predictor        7.0236         8.3796          -0.2189
+    Random Forest        1.7483         3.3665           0.7738
+Linear Regression        2.3782         3.6507           0.7232
+ Ridge Regression        2.3783         3.6506           0.7232
+   Mean Predictor        6.7937         8.1687          -0.1724

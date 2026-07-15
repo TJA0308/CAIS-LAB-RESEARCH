@@ -164,6 +164,26 @@ def prepare_dataset(run_names):
     return dataset
 
 
+def metrics_row(train_runs, test_run, model_name, train_rows, test_rows, y_test, predictions):
+    mae_values = mean_absolute_error(y_test, predictions, multioutput="raw_values")
+    rmse_values = np.sqrt(
+        mean_squared_error(y_test, predictions, multioutput="raw_values")
+    )
+    return {
+        "train_runs": " + ".join(train_runs),
+        "test_run": test_run,
+        "model": model_name,
+        "train_rows": train_rows,
+        "test_rows": test_rows,
+        "mae_tower": mae_values[0],
+        "mae_treated": mae_values[1],
+        "mae_raw": mae_values[2],
+        "avg_mae": mae_values.mean(),
+        "avg_rmse": rmse_values.mean(),
+        "overall_r2": r2_score(y_test, predictions, multioutput="variance_weighted"),
+    }
+
+
 def evaluate_models(dataset, run_names):
     results = []
     target_columns = (
@@ -182,40 +202,37 @@ def evaluate_models(dataset, run_names):
         x_test = test_data[FEATURE_COLUMNS]
         y_test = test_data[target_columns]
 
+        # Persistence baseline: predict "no change" over the horizon, i.e. the
+        # future tank reading equals the current tank reading. This is the honest
+        # reference for a short-horizon forecast; the mean predictor alone would
+        # flatter the models because tank levels are highly autocorrelated.
+        persistence_predictions = test_data[TARGET_COLUMNS].to_numpy()
+        results.append(
+            metrics_row(
+                train_runs,
+                test_run,
+                "Persistence (no change)",
+                len(train_data),
+                len(x_test),
+                y_test,
+                persistence_predictions,
+            )
+        )
+
         for model_name, model in MODELS.items():
             model.fit(x_train, y_train)
             predictions = model.predict(x_test)
-
-            mae_values = mean_absolute_error(
-                y_test,
-                predictions,
-                multioutput="raw_values",
-            )
-            rmse_values = np.sqrt(
-                mean_squared_error(
+            results.append(
+                metrics_row(
+                    train_runs,
+                    test_run,
+                    model_name,
+                    len(train_data),
+                    len(x_test),
                     y_test,
                     predictions,
-                    multioutput="raw_values",
                 )
             )
-
-            results.append({
-                "train_runs": " + ".join(train_runs),
-                "test_run": test_run,
-                "model": model_name,
-                "train_rows": len(train_data),
-                "test_rows": len(x_test),
-                "mae_tower": mae_values[0],
-                "mae_treated": mae_values[1],
-                "mae_raw": mae_values[2],
-                "avg_mae": mae_values.mean(),
-                "avg_rmse": rmse_values.mean(),
-                "overall_r2": r2_score(
-                    y_test,
-                    predictions,
-                    multioutput="variance_weighted",
-                ),
-            })
 
     return pd.DataFrame(results)
 
@@ -268,8 +285,12 @@ def write_outputs(results, run_row_counts):
         summary_file.write("Evaluation\n")
         summary_file.write(
             "Leave-one-run-out validation across available merged runs only. "
-            "No random row split is used. These results are exploratory and should "
-            "not be treated as production accuracy.\n\n"
+            "No random row split is used. The reference baseline is persistence "
+            "(future reading = current reading), not the mean predictor: over a "
+            f"{HORIZON_SECONDS}s horizon the tanks change slowly, so a model must be "
+            "compared against persistence to show it has learned any real dynamics. "
+            "These results are exploratory and should not be treated as production "
+            "accuracy.\n\n"
         )
         summary_file.write("Best model per held-out run by average MAE\n")
         summary_file.write(best_by_split.round(4).to_string(index=False))
