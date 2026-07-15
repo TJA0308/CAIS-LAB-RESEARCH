@@ -14,6 +14,7 @@ from config import ANALYSIS_DIR, EXPORT_DIR
 
 HORIZON_SECONDS = 10
 MAX_TANK_MISSING_PERCENT = 25.0
+Clean_CSV_PATH = Path(EXPORT_DIR) / "clean_tank_forecasting_data.csv"
 MERGED_CANDIDATE_RUNS = [
     "full_cycle_run_002",
     "full_cycle_run_003",
@@ -36,6 +37,8 @@ FEATURE_COLUMNS = [
     "raw",
 ]
 TARGET_COLUMNS = ["tower", "treated", "raw"]
+RAW_FUTURE_TARGET_COLUMNS = [f"{column}_future" for column in TARGET_COLUMNS]
+CLEAN_FUTURE_TARGET_COLUMNS = [f"{column}_future_10s" for column in TARGET_COLUMNS]
 MODELS = {
     "Mean Predictor": DummyRegressor(strategy="mean"),
     "Linear Regression": LinearRegression(),
@@ -80,6 +83,26 @@ def load_candidate_runs():
         )
 
     return candidate_runs
+
+
+def load_clean_dataset():
+    data = pd.read_csv(Clean_CSV_PATH)
+
+    required_columns = ["run_name"] + FEATURE_COLUMNS + CLEAN_FUTURE_TARGET_COLUMNS
+    missing_columns = [column for column in required_columns if column not in data.columns]
+    if missing_columns:
+        raise ValueError(
+            "Clean CSV is missing required columns: " + ", ".join(missing_columns)
+        )
+
+    present_runs = [
+        run_name for run_name in MERGED_CANDIDATE_RUNS if run_name in set(data["run_name"])
+    ]
+    if len(present_runs) < 2:
+        raise ValueError("Need at least two usable runs in clean forecasting CSV.")
+
+    data = data[data["run_name"].isin(present_runs)].copy()
+    return data, present_runs
 
 
 def load_merged_run(run_name):
@@ -145,6 +168,11 @@ def prepare_dataset(run_names):
 
 def evaluate_models(dataset, run_names):
     results = []
+    target_columns = (
+        CLEAN_FUTURE_TARGET_COLUMNS
+        if all(column in dataset.columns for column in CLEAN_FUTURE_TARGET_COLUMNS)
+        else RAW_FUTURE_TARGET_COLUMNS
+    )
 
     for test_run in run_names:
         train_runs = [run_name for run_name in run_names if run_name != test_run]
@@ -152,11 +180,9 @@ def evaluate_models(dataset, run_names):
         test_data = dataset[dataset["run_name"] == test_run]
 
         x_train = train_data[FEATURE_COLUMNS]
-        y_train = train_data[[f"{column}_future" for column in TARGET_COLUMNS]]
+        y_train = train_data[target_columns]
         x_test = test_data[FEATURE_COLUMNS]
-        y_test = test_data[
-            [f"{column}_future" for column in TARGET_COLUMNS]
-        ]
+        y_test = test_data[target_columns]
 
         for model_name, model in MODELS.items():
             model.fit(x_train, y_train)
@@ -258,17 +284,25 @@ def write_outputs(results, run_row_counts):
 
 
 def main():
-    run_names = load_candidate_runs()
-    if len(run_names) < 2:
-        raise ValueError(
-            "Need at least two usable merged runs for held-out run validation."
-        )
+    if Clean_CSV_PATH.exists():
+        dataset, run_names = load_clean_dataset()
+        data_source = "clean CSV"
+    else:
+        run_names = load_candidate_runs()
+        if len(run_names) < 2:
+            raise ValueError(
+                "Need at least two usable merged runs for held-out run validation."
+            )
 
-    dataset = prepare_dataset(run_names)
+        dataset = prepare_dataset(run_names)
+        data_source = "raw merged files"
+
     run_row_counts = dataset.groupby("run_name").size().to_dict()
     results = evaluate_models(dataset, run_names)
 
     print("\nRuns used for tank forecasting")
+    print("=" * 80)
+    print(f"Data source: {data_source}")
     print("=" * 80)
     for run_name in run_names:
         print(f"- {run_name}: {run_row_counts[run_name]} modeling rows")

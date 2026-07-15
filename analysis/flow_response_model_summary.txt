@@ -5,10 +5,10 @@ Task
 Predict ESP32 flow response from pump PWM and valve control states.
 
 Runs Used
-- full_cycle_run_001: 2143 rows
-- full_cycle_run_002: 1480 rows
-- full_cycle_run_003: 740 rows
-- pump_pwm_sweep_run_001: 1547 rows
+- full_cycle_run_001: 2132 rows
+- full_cycle_run_002: 1471 rows
+- full_cycle_run_003: 730 rows
+- pump_pwm_sweep_run_001: 1091 rows
 - valve_routing_run_001: 1347 rows
 
 Rows dropped for missing values: 0
@@ -24,15 +24,15 @@ Leave-one-run-out cross-validation across five runs. No random row split is used
 
 Best Model Per Held-Out Run by Average MAE
                                                                               train_runs               test_run             model  train_rows  test_rows  mae_flow_p1  mae_flow_p2  mae_flow_valve1  mae_flow_outlet  avg_mae  avg_rmse  overall_r2
-full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_001     Random Forest        5114       2143       4.2359       2.1493           2.2557           1.4414   2.5206    5.2003      0.5634
-full_cycle_run_001 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002     Random Forest        5777       1480       1.4762       1.4310           2.2288           0.9127   1.5122    2.8409      0.8731
-full_cycle_run_001 + full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        6517        740       6.4061       4.4068           1.7301           2.2870   3.7075    5.0696      0.7675
-    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001     Random Forest        5710       1547       2.3184       3.2405           0.2099           0.5833   1.5880    3.6069      0.5894
-   full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001     Random Forest        5910       1347       0.1455       0.2048           2.4376           2.6336   1.3554    2.4257      0.5783
+full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_001     Random Forest        4639       2132       4.2917       2.1163           2.2654           1.4188   2.5231    5.1865      0.5679
+full_cycle_run_001 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002     Random Forest        5300       1471       1.4362       1.3535           2.2282           0.9048   1.4807    2.7784      0.8782
+full_cycle_run_001 + full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        6041        730       6.3170       4.0846           1.7337           2.3690   3.6261    4.9053      0.7860
+    full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001     Random Forest        5680       1091       2.2333       4.1961           0.2209           0.5409   1.7978    3.9115      0.6030
+   full_cycle_run_001 + full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001     Random Forest        5424       1347       0.1473       0.2041           2.4358           2.6298   1.3543    2.4263      0.5782
 
 Average Summary By Model
             model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
-    Random Forest        2.1568         3.9917           0.6514
-Linear Regression        2.5965         3.9838           0.6607
- Ridge Regression        2.5965         3.9836           0.6607
-   Mean Predictor        6.7658         8.1716          -0.2193
+    Random Forest        2.1683         3.9945           0.6647
+Linear Regression        2.5907         3.9262           0.6851
+ Ridge Regression        2.5909         3.9260           0.6851
+   Mean Predictor        7.0236         8.3796          -0.2189

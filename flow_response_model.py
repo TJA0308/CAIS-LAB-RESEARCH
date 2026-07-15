@@ -10,7 +10,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from config import ANALYSIS_DIR, DB_NAME
+from config import ANALYSIS_DIR, DB_NAME, EXPORT_DIR
 
 
 CLEAN_RUNS = [
@@ -36,6 +36,8 @@ TARGET_COLUMNS = [
     "flow_valve1",
     "flow_outlet",
 ]
+ALL_REQUIRED_COLUMNS = ["run_name"] + FEATURE_COLUMNS + TARGET_COLUMNS
+Clean_CSV_PATH = Path(EXPORT_DIR) / "clean_esp32_model_data.csv"
 
 MODELS = {
     "Mean Predictor": DummyRegressor(strategy="mean"),
@@ -50,13 +52,25 @@ MODELS = {
 
 
 def load_data():
+    if Clean_CSV_PATH.exists():
+        data = pd.read_csv(Clean_CSV_PATH)
+        missing_columns = [
+            column for column in ALL_REQUIRED_COLUMNS if column not in data.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                "Clean CSV is missing required columns: " + ", ".join(missing_columns)
+            )
+
+        data = data[data["run_name"].isin(CLEAN_RUNS)].copy()
+        return data, "clean CSV"
+
     placeholders = ",".join("?" for _ in CLEAN_RUNS)
-    selected_columns = ["run_name"] + FEATURE_COLUMNS + TARGET_COLUMNS
 
     conn = sqlite3.connect(DB_NAME)
     data = pd.read_sql_query(
         f"""
-        SELECT {", ".join(selected_columns)}
+        SELECT {", ".join(ALL_REQUIRED_COLUMNS)}
         FROM esp32_matlab_data
         WHERE run_name IN ({placeholders})
         ORDER BY run_name, timestamp
@@ -66,7 +80,7 @@ def load_data():
     )
     conn.close()
 
-    return data
+    return data, "raw SQLite database"
 
 
 def validate_data(data):
@@ -79,7 +93,7 @@ def validate_data(data):
             + ", ".join(missing_runs)
         )
 
-    required_columns = ["run_name"] + FEATURE_COLUMNS + TARGET_COLUMNS
+    required_columns = ALL_REQUIRED_COLUMNS
     rows_before = len(data)
     data = data.dropna(subset=required_columns).copy()
     rows_dropped = rows_before - len(data)
@@ -216,7 +230,7 @@ def write_summary(results, row_counts, rows_dropped):
 
 
 def main():
-    data = load_data()
+    data, data_source = load_data()
     data, rows_dropped = validate_data(data)
 
     row_counts = data.groupby("run_name").size()
@@ -238,6 +252,8 @@ def main():
     ]
 
     print("\nFlow response model results")
+    print("=" * 80)
+    print(f"Data source: {data_source}")
     print("=" * 80)
     print(results[display_columns].round(4).to_string(index=False))
 
