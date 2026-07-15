@@ -6,6 +6,7 @@ Proof-of-concept regression models predict Arduino tank readings 10 seconds into
 Runs used
 - full_cycle_run_002: 717 modeling rows
 - full_cycle_run_003: 355 modeling rows
+- full_cycle_run_004: 959 modeling rows
 - pump_pwm_sweep_run_001: 753 modeling rows
 - valve_routing_run_001: 654 modeling rows
 
@@ -19,15 +20,16 @@ Evaluation
 Leave-one-run-out validation across available merged runs only. No random row split is used. These results are exploratory and should not be treated as production accuracy.
 
 Best model per held-out run by average MAE
-                                                         train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
-full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002 Linear Regression        1762        717     8.6092      34.3062   3.7720  15.5625   23.8073      0.9558
-full_cycle_run_002 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        2124        355     8.7360       9.6456   3.4666   7.2827   21.4635      0.7499
-    full_cycle_run_002 + full_cycle_run_003 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        1726        753    10.0098       6.4105   3.9317   6.7840    9.1963      0.9561
-   full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001  valve_routing_run_001 Linear Regression        1825        654     8.5863      24.5966   3.0521  12.0783   15.9031      0.9228
+                                                                              train_runs               test_run             model  train_rows  test_rows  mae_tower  mae_treated  mae_raw  avg_mae  avg_rmse  overall_r2
+full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_002 Linear Regression        2721        717     5.6247      17.2847   3.0572   8.6555   21.0242      0.9652
+full_cycle_run_002 + full_cycle_run_004 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_003 Linear Regression        3083        355     7.5506       8.4975   3.2323   6.4268   21.1477      0.7560
+full_cycle_run_002 + full_cycle_run_003 + pump_pwm_sweep_run_001 + valve_routing_run_001     full_cycle_run_004 Linear Regression        2479        959     7.5673       6.8708   3.0759   5.8380   12.1633      0.9209
+    full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + valve_routing_run_001 pump_pwm_sweep_run_001 Linear Regression        2685        753     8.0078       5.0585   2.4161   5.1608    8.2290      0.9642
+   full_cycle_run_002 + full_cycle_run_003 + full_cycle_run_004 + pump_pwm_sweep_run_001  valve_routing_run_001 Linear Regression        2784        654     6.6732      15.1692   2.0635   7.9686   12.6184      0.9507
 
 Average summary by model
             model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
-Linear Regression       10.4269        17.5925           0.8961
- Ridge Regression       10.7198        17.7948           0.8951
-    Random Forest       65.0506        76.9682          -0.1934
-   Mean Predictor      123.1660       135.6280          -3.3086
+Linear Regression        6.8099        15.0365           0.9114
+ Ridge Regression        6.8852        15.0719           0.9112
+    Random Forest       52.7974        64.9600           0.0231
+   Mean Predictor      108.8549       121.3505          -3.2893

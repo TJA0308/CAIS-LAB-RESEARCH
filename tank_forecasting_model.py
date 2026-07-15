@@ -95,13 +95,11 @@ def load_clean_dataset():
             "Clean CSV is missing required columns: " + ", ".join(missing_columns)
         )
 
-    present_runs = [
-        run_name for run_name in MERGED_CANDIDATE_RUNS if run_name in set(data["run_name"])
-    ]
+    data = data.dropna(subset=["run_name"]).copy()
+    present_runs = sorted(data["run_name"].astype(str).unique().tolist())
     if len(present_runs) < 2:
         raise ValueError("Need at least two usable runs in clean forecasting CSV.")
 
-    data = data[data["run_name"].isin(present_runs)].copy()
     return data, present_runs
 
 
