@@ -1,13 +1,16 @@
 """
 Generate poster / presentation figures from existing pipeline outputs.
 
-Produces four PNGs in plots/:
-  1. synchronized_timeline_<run>.png  - pump/valve/flow/tank on one wall-clock axis
-  2. flow_response_model_results.png  - LORO MAE and R2 by model
-  3. tank_forecasting_model_results.png - LORO MAE and R2 by model (with persistence)
-  4. architecture_diagram.png         - data-flow / system architecture
+Produces PNGs in plots/:
+  1. synchronized_timeline_<run>.png       - pump/valve/flow/tank on one wall-clock axis
+  2. flow_response_model_results.png        - LORO MAE and R2 by model
+  3. flow_prediction_overlay_<run>.png      - held-out predicted vs measured flow
+  4. tank_forecasting_model_results.png     - LORO MAE and R2 by model (with persistence)
+  5. architecture_diagram.png               - data-flow / system architecture
 
-Run after flow_response_model.py and tank_forecasting_model.py.
+Run after:
+  python -m scripts.models.flow_response_model
+  python -m scripts.models.tank_forecasting_model
 """
 
 from pathlib import Path
@@ -39,6 +42,17 @@ FLOW_FEATURE_COLUMNS = [
     "valve4",
 ]
 FLOW_TARGET_COLUMNS = ["flow_p1", "flow_p2", "flow_valve1", "flow_outlet"]
+TANK_COLUMNS = ["tower", "treated", "raw"]
+
+BAR_BLUE = "#2b7bba"
+BAR_GREY = "#b0b0b0"
+
+
+def despike_for_plot(series, threshold=250, window=5):
+    values = pd.to_numeric(series, errors="coerce")
+    rolling_median = values.rolling(window=window, center=True, min_periods=3).median()
+    spike_mask = (values - rolling_median).abs() > threshold
+    return values.mask(spike_mask).interpolate(limit_direction="both")
 
 
 def synchronized_timeline(run_name=SYNC_RUN):
@@ -75,12 +89,11 @@ def synchronized_timeline(run_name=SYNC_RUN):
     axes[2].set_ylabel("Flow reading")
     axes[2].set_title("Flow Response")
 
-    axes[3].plot(t, data["tower"], label="Tower")
-    axes[3].plot(t, data["treated"], label="Treated")
-    axes[3].plot(t, data["raw"], label="Raw")
+    for tank in TANK_COLUMNS:
+        axes[3].plot(t, despike_for_plot(data[tank]), label=tank.title())
     axes[3].set_ylabel("Tank reading\n(raw ultrasonic)")
     axes[3].set_xlabel("Time since run start (s, wall-clock synchronized)")
-    axes[3].set_title("Tank Levels")
+    axes[3].set_title("Tank Levels (isolated ultrasonic spikes interpolated for display)")
 
     for ax in axes:
         ax.legend(loc="upper right", fontsize=8)
@@ -93,54 +106,81 @@ def synchronized_timeline(run_name=SYNC_RUN):
     print(f"Saved {out}")
 
 
+# ---------------------------------------------------------------------------
+# Model result charts
+# ---------------------------------------------------------------------------
 def _model_summary(results_csv):
     results = pd.read_csv(results_csv)
-    summary = (
-        results.groupby("model", as_index=False)
-        .agg(
-            avg_mae=("avg_mae", "mean"),
-            std_mae=("avg_mae", "std"),
-            avg_r2=("overall_r2", "mean"),
-            std_r2=("overall_r2", "std"),
-        )
+    summary = results.groupby("model", as_index=False).agg(
+        avg_mae=("avg_mae", "mean"),
+        std_mae=("avg_mae", "std"),
+        avg_r2=("overall_r2", "mean"),
+        std_r2=("overall_r2", "std"),
     )
     summary[["std_mae", "std_r2"]] = summary[["std_mae", "std_r2"]].fillna(0)
     return summary
 
 
-def _dot_offsets(count):
-    if count <= 1:
-        return np.array([0.0])
-    return np.linspace(-0.18, 0.18, count)
+def _fold_values(results, metric_column):
+    return {
+        model: results.loc[results["model"] == model, metric_column].to_numpy()
+        for model in results["model"].unique()
+    }
 
 
 def _bar_colors(models, baseline_names):
-    return ["#b0b0b0" if model in baseline_names else "#2b7bba" for model in models]
+    return [BAR_GREY if model in baseline_names else BAR_BLUE for model in models]
 
 
-def _add_fold_dots(ax, results, metric_column, ordered_models):
-    for y, model in enumerate(ordered_models):
-        values = results.loc[results["model"] == model, metric_column].to_numpy()
-        if values.size == 0:
-            continue
-        offsets = _dot_offsets(values.size)
-        ax.scatter(
-            values,
-            y + offsets,
-            s=22,
-            color="#1f1f1f",
-            alpha=0.72,
-            zorder=3,
-            linewidth=0,
+def _clean_panel(
+    ax,
+    models,
+    means,
+    stds,
+    fold_values,
+    colors,
+    xlabel,
+    title,
+    fmt="{:.2f}",
+    right_pad=0.22,
+):
+    """One horizontal bar panel: mean bar + std whisker + tight fold dots +
+    a right-aligned column of value labels that never overlaps the bars."""
+    y = np.arange(len(models))
+    ax.barh(y, means, color=colors, height=0.62, zorder=2)
+    ax.errorbar(
+        means, y, xerr=stds, fmt="none",
+        ecolor="#2a2a2a", elinewidth=1.1, capsize=3, zorder=3,
+    )
+
+    # Individual held-out folds as a tight, low-noise cluster on each bar.
+    for i, model in enumerate(models):
+        vals = fold_values.get(model, np.array([]))
+        n = len(vals)
+        if n:
+            jitter = np.linspace(-0.05, 0.05, n) if n > 1 else np.array([0.0])
+            ax.scatter(
+                vals, i + jitter, s=13, color="#1b1b1b",
+                alpha=0.45, linewidth=0, zorder=4,
+            )
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(models)
+    ax.set_title(title, fontsize=11)
+    ax.set_xlabel(xlabel)
+    ax.invert_yaxis()
+    ax.grid(axis="x", alpha=0.18, zorder=0)
+
+    # Add right margin so the value-label column sits off the bars.
+    lo, hi = ax.get_xlim()
+    ax.set_xlim(lo, hi + right_pad * (hi - lo))
+    for i, value in enumerate(means):
+        ax.text(
+            0.99, i, fmt.format(value),
+            transform=ax.get_yaxis_transform(),
+            ha="right", va="center", fontsize=9, color="#111111",
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.75),
         )
-
-
-def _format_r2_axis(ax, values):
-    r2_min = min(0, float(values.min()))
-    r2_max = max(0, float(values.max()))
-    r2_range = r2_max - r2_min or 1
-    ax.set_xlim(r2_min - 0.12 * r2_range, r2_max + 0.16 * r2_range)
-    return r2_range
 
 
 def model_results_bar(results_csv, title, out_name, baseline_names):
@@ -150,70 +190,34 @@ def model_results_bar(results_csv, title, out_name, baseline_names):
         return
 
     results = pd.read_csv(results_csv)
-    summary = _model_summary(results_csv).sort_values("avg_mae")
-    models = summary["model"].tolist()
-    colors = _bar_colors(models, baseline_names)
+    summary = _model_summary(results_csv)
 
     fig, (ax_mae, ax_r2) = plt.subplots(1, 2, figsize=(12, 5))
     fig.suptitle(title, fontsize=14)
 
-    y_positions = np.arange(len(summary))
-    ax_mae.barh(y_positions, summary["avg_mae"], color=colors)
-    ax_mae.errorbar(
-        summary["avg_mae"],
-        y_positions,
-        xerr=summary["std_mae"],
-        fmt="none",
-        ecolor="#303030",
-        elinewidth=1,
-        capsize=3,
-        zorder=4,
+    s_mae = summary.sort_values("avg_mae")
+    _clean_panel(
+        ax_mae, s_mae["model"].tolist(), s_mae["avg_mae"].to_numpy(),
+        s_mae["std_mae"].to_numpy(), _fold_values(results, "avg_mae"),
+        _bar_colors(s_mae["model"], baseline_names),
+        "Average MAE (lower is better)", "Error",
     )
-    _add_fold_dots(ax_mae, results, "avg_mae", models)
-    ax_mae.set_yticks(y_positions)
-    ax_mae.set_yticklabels(models)
-    ax_mae.set_xlabel("Average MAE (lower is better)")
-    ax_mae.invert_yaxis()
-    for y, value in enumerate(summary["avg_mae"]):
-        ax_mae.text(value, y, f" {value:.2f}", va="center", fontsize=9)
 
-    r2_sorted = summary.sort_values("avg_r2", ascending=False)
-    r2_models = r2_sorted["model"].tolist()
-    r2_positions = np.arange(len(r2_sorted))
-    r2_colors = _bar_colors(r2_models, baseline_names)
-    ax_r2.barh(r2_positions, r2_sorted["avg_r2"], color=r2_colors)
-    ax_r2.errorbar(
-        r2_sorted["avg_r2"],
-        r2_positions,
-        xerr=r2_sorted["std_r2"],
-        fmt="none",
-        ecolor="#303030",
-        elinewidth=1,
-        capsize=3,
-        zorder=4,
+    s_r2 = summary.sort_values("avg_r2", ascending=False)
+    _clean_panel(
+        ax_r2, s_r2["model"].tolist(), s_r2["avg_r2"].to_numpy(),
+        s_r2["std_r2"].to_numpy(), _fold_values(results, "overall_r2"),
+        _bar_colors(s_r2["model"], baseline_names),
+        "Average R2 (higher is better)", "Generalization",
     )
-    _add_fold_dots(ax_r2, results, "overall_r2", r2_models)
-    ax_r2.set_yticks(r2_positions)
-    ax_r2.set_yticklabels(r2_models)
-    ax_r2.set_xlabel("Average R2 (higher is better)")
-    ax_r2.axvline(0, color="black", linewidth=0.8)
-    ax_r2.invert_yaxis()
-    r2_range = _format_r2_axis(ax_r2, r2_sorted["avg_r2"])
-    for y, (model, value) in enumerate(zip(r2_sorted["model"], r2_sorted["avg_r2"])):
-        if value >= 0:
-            ax_r2.text(value + 0.02 * r2_range, y, f"{value:.2f}", va="center", fontsize=9)
-        else:
-            ax_r2.text(
-                value / 2,
-                y,
-                f"{value:.2f}",
-                va="center",
-                ha="center",
-                color="black" if model in baseline_names else "white",
-                fontsize=9,
-            )
+    ax_r2.axvline(0, color="black", linewidth=0.8, zorder=1)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    fig.text(
+        0.5, 0.015,
+        "Bars = mean across held-out runs; whiskers = std; dots = individual runs.",
+        ha="center", fontsize=9, color="#555555",
+    )
+    plt.tight_layout(rect=[0, 0.04, 1, 0.94])
     out = PLOT_PATH / out_name
     plt.savefig(out, dpi=200)
     plt.close()
@@ -228,109 +232,57 @@ def tank_model_results_bar(results_csv, out_name):
 
     results = pd.read_csv(results_csv)
     baseline_names = {"Mean Predictor", "Persistence (no change)"}
-    summary = _model_summary(results_csv).sort_values("avg_mae")
-    models = summary["model"].tolist()
-    y_positions = np.arange(len(summary))
+    summary = _model_summary(results_csv)
 
     fig, (ax_mae, ax_zoom, ax_r2) = plt.subplots(
-        1,
-        3,
-        figsize=(15, 5),
-        gridspec_kw={"width_ratios": [1.15, 0.8, 1.15]},
+        1, 3, figsize=(15, 5), gridspec_kw={"width_ratios": [1.1, 0.9, 1.1]}
     )
     fig.suptitle("Tank Forecasting (+10s) - Leave-One-Run-Out Validation", fontsize=14)
 
-    ax_mae.barh(y_positions, summary["avg_mae"], color=_bar_colors(models, baseline_names))
-    ax_mae.errorbar(
-        summary["avg_mae"],
-        y_positions,
-        xerr=summary["std_mae"],
-        fmt="none",
-        ecolor="#303030",
-        elinewidth=1,
-        capsize=3,
-        zorder=4,
+    s_mae = summary.sort_values("avg_mae")
+    _clean_panel(
+        ax_mae, s_mae["model"].tolist(), s_mae["avg_mae"].to_numpy(),
+        s_mae["std_mae"].to_numpy(), _fold_values(results, "avg_mae"),
+        _bar_colors(s_mae["model"], baseline_names),
+        "Average MAE", "All models",
     )
-    _add_fold_dots(ax_mae, results, "avg_mae", models)
-    ax_mae.set_yticks(y_positions)
-    ax_mae.set_yticklabels(models)
-    ax_mae.set_xlabel("Average MAE")
-    ax_mae.set_title("All models")
-    ax_mae.invert_yaxis()
-    for y, value in enumerate(summary["avg_mae"]):
-        ax_mae.text(value, y, f" {value:.2f}", va="center", fontsize=9)
 
     zoom_models = ["Persistence (no change)", "Linear Regression", "Ridge Regression"]
-    zoom = summary[summary["model"].isin(zoom_models)].copy()
-    zoom["order"] = zoom["model"].map({model: index for index, model in enumerate(zoom_models)})
-    zoom = zoom.sort_values("order")
-    zoom_positions = np.arange(len(zoom))
-    ax_zoom.barh(
-        zoom_positions,
-        zoom["avg_mae"],
-        color=_bar_colors(zoom["model"], baseline_names),
+    zoom = (
+        summary[summary["model"].isin(zoom_models)]
+        .set_index("model")
+        .loc[zoom_models]
+        .reset_index()
     )
-    ax_zoom.errorbar(
-        zoom["avg_mae"],
-        zoom_positions,
-        xerr=zoom["std_mae"],
-        fmt="none",
-        ecolor="#303030",
-        elinewidth=1,
-        capsize=3,
-        zorder=4,
+    zoom_folds = {
+        model: values
+        for model, values in _fold_values(results, "avg_mae").items()
+        if model in zoom_models
+    }
+    _clean_panel(
+        ax_zoom, zoom["model"].tolist(), zoom["avg_mae"].to_numpy(),
+        zoom["std_mae"].to_numpy(), zoom_folds,
+        _bar_colors(zoom["model"], baseline_names),
+        "Average MAE", "Zoom: near-baseline models", right_pad=0.30,
     )
-    _add_fold_dots(ax_zoom, results, "avg_mae", zoom["model"].tolist())
-    ax_zoom.set_yticks(zoom_positions)
-    ax_zoom.set_yticklabels(zoom["model"])
-    ax_zoom.set_xlabel("Average MAE")
-    ax_zoom.set_title("Zoom: near-baseline models")
-    ax_zoom.invert_yaxis()
-    zoom_max = max(float(zoom["avg_mae"].max() + zoom["std_mae"].max()), 1)
-    ax_zoom.set_xlim(0, zoom_max * 1.35)
-    for y, value in enumerate(zoom["avg_mae"]):
-        ax_zoom.text(value, y, f" {value:.2f}", va="center", fontsize=9)
+    ax_zoom.set_xlim(left=0)
 
-    r2_sorted = summary.sort_values("avg_r2", ascending=False)
-    r2_models = r2_sorted["model"].tolist()
-    r2_positions = np.arange(len(r2_sorted))
-    ax_r2.barh(r2_positions, r2_sorted["avg_r2"], color=_bar_colors(r2_models, baseline_names))
-    ax_r2.errorbar(
-        r2_sorted["avg_r2"],
-        r2_positions,
-        xerr=r2_sorted["std_r2"],
-        fmt="none",
-        ecolor="#303030",
-        elinewidth=1,
-        capsize=3,
-        zorder=4,
+    s_r2 = summary.sort_values("avg_r2", ascending=False)
+    _clean_panel(
+        ax_r2, s_r2["model"].tolist(), s_r2["avg_r2"].to_numpy(),
+        s_r2["std_r2"].to_numpy(), _fold_values(results, "overall_r2"),
+        _bar_colors(s_r2["model"], baseline_names),
+        "Average R2", "Generalization",
     )
-    _add_fold_dots(ax_r2, results, "overall_r2", r2_models)
-    ax_r2.set_yticks(r2_positions)
-    ax_r2.set_yticklabels(r2_models)
-    ax_r2.set_xlabel("Average R2")
-    ax_r2.set_title("Generalization")
-    ax_r2.axvline(0, color="black", linewidth=0.8)
-    ax_r2.invert_yaxis()
-    r2_range = _format_r2_axis(ax_r2, r2_sorted["avg_r2"])
-    for y, (model, value) in enumerate(zip(r2_sorted["model"], r2_sorted["avg_r2"])):
-        if value >= 0:
-            ax_r2.text(value + 0.02 * r2_range, y, f"{value:.2f}", va="center", fontsize=9)
-        else:
-            ax_r2.text(
-                value / 2,
-                y,
-                f"{value:.2f}",
-                va="center",
-                ha="center",
-                color="black" if model in baseline_names else "white",
-                fontsize=9,
-            )
+    ax_r2.axvline(0, color="black", linewidth=0.8, zorder=1)
 
-    for ax in (ax_mae, ax_zoom, ax_r2):
-        ax.grid(axis="x", alpha=0.2)
-
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.text(
+        0.5, 0.015,
+        "Persistence (grey) = predict no change. Regression matches but does not beat it "
+        "-> short-horizon tank state is persistence-dominated.",
+        ha="center", fontsize=9, color="#555555",
+    )
+    plt.tight_layout(rect=[0, 0.04, 1, 0.93])
     out = PLOT_PATH / out_name
     plt.savefig(out, dpi=200)
     plt.close()
@@ -383,7 +335,7 @@ def flow_prediction_overlay(run_name=FLOW_OVERLAY_RUN):
 
     for ax, (column, label) in zip(axes, channels):
         ax.plot(t, test_data[column], color="#1f1f1f", linewidth=1.2, label="Measured")
-        ax.plot(t, predictions[column], color="#2b7bba", linewidth=1.2, label="Predicted")
+        ax.plot(t, predictions[column], color=BAR_BLUE, linewidth=1.2, label="Predicted")
         channel_r2 = r2_score(test_data[column], predictions[column])
         ax.set_ylabel(label)
         ax.set_title(f"{label} (R2={channel_r2:.2f})", fontsize=10)
@@ -393,6 +345,48 @@ def flow_prediction_overlay(run_name=FLOW_OVERLAY_RUN):
     axes[-1].set_xlabel("Time since held-out run start (s)")
     plt.tight_layout(rect=[0, 0, 1, 0.94])
     out = PLOT_PATH / f"flow_prediction_overlay_{run_name}.png"
+    plt.savefig(out, dpi=200)
+    plt.close()
+    print(f"Saved {out}")
+
+
+def flow_feature_importance(out_name="flow_feature_importance.png"):
+    """Which control channels drive the flow response (RF importance)."""
+    try:
+        from scripts.models.flow_response_model import (
+            CLEAN_RUNS,
+            FEATURE_COLUMNS,
+            TARGET_COLUMNS,
+        )
+    except Exception as error:  # pragma: no cover - defensive
+        print(f"Skipping feature importance: {error}")
+        return
+
+    csv_path = Path(EXPORT_DIR) / "clean_esp32_model_data.csv"
+    if not csv_path.exists():
+        print(f"Skipping feature importance: {csv_path} not found")
+        return
+
+    data = pd.read_csv(csv_path)
+    data = data[data["run_name"].isin(CLEAN_RUNS)].dropna(subset=FEATURE_COLUMNS + TARGET_COLUMNS)
+    if data.empty:
+        print("Skipping feature importance: no rows")
+        return
+
+    model = RandomForestRegressor(n_estimators=200, random_state=42, min_samples_leaf=5)
+    model.fit(data[FEATURE_COLUMNS], data[TARGET_COLUMNS])
+    importance = pd.Series(model.feature_importances_, index=FEATURE_COLUMNS).sort_values()
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.barh(importance.index, importance.values, color=BAR_BLUE, height=0.62)
+    for i, value in enumerate(importance.values):
+        ax.text(value, i, f" {value:.2f}", va="center", fontsize=9)
+    ax.set_xlim(0, importance.max() * 1.18)
+    ax.set_xlabel("Random forest feature importance")
+    ax.set_title("What drives the flow response?\n(RF importance, trained on all clean runs)")
+    ax.grid(axis="x", alpha=0.18)
+    plt.tight_layout()
+    out = PLOT_PATH / out_name
     plt.savefig(out, dpi=200)
     plt.close()
     print(f"Saved {out}")
@@ -431,12 +425,9 @@ def architecture_diagram():
 
     box(0.3, 4.4, 2.6, 1.4, "Arduino UNO\nultrasonic tank\nsensors", sensor)
     box(0.3, 1.0, 2.6, 1.4, "ESP32 / MATLAB\npump, valve,\nflow logs (.mat)", sensor)
-
     box(3.6, 2.7, 2.4, 1.6, "SQLite\nwater_testbed.db\nrun-indexed\n29K+ rows", store)
-
     box(6.6, 4.4, 2.4, 1.4, "Wall-clock sync\n-> merged 1-s\ntime-series", proc)
     box(6.6, 1.0, 2.4, 1.4, "Cleaning +\nanomaly / data-\nquality flags", proc)
-
     box(9.5, 4.4, 2.2, 1.4, "Flow-response\nmodel (LORO)", ml)
     box(9.5, 1.0, 2.2, 1.4, "Tank forecast\n(LORO, vs\npersistence)", ml)
     box(9.5, 2.75, 2.2, 1.2, "Plots, reports,\nsummary tables", proc)
@@ -449,9 +440,11 @@ def architecture_diagram():
     arrow(9.0, 5.1, 9.5, 5.1)
     arrow(9.0, 4.9, 9.5, 1.9)
 
-    ax.text(6.0, 0.3,
-            "Future work: live MQTT -> ProtoTwin 3-D visualization",
-            ha="center", fontsize=9, style="italic", color="#777777")
+    ax.text(
+        6.0, 0.3,
+        "Future work: live MQTT -> ProtoTwin 3-D visualization",
+        ha="center", fontsize=9, style="italic", color="#777777",
+    )
 
     out = PLOT_PATH / "architecture_diagram.png"
     plt.savefig(out, dpi=200, bbox_inches="tight")
@@ -468,6 +461,7 @@ def main():
         baseline_names={"Mean Predictor"},
     )
     flow_prediction_overlay()
+    flow_feature_importance()
     tank_model_results_bar(
         Path(ANALYSIS_DIR) / "tank_forecasting_model_results.csv",
         "tank_forecasting_model_results.png",

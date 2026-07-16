@@ -1,0 +1,36 @@
+Tank Forecasting Horizon Sweep
+==============================
+
+Task: compare short and longer tank-level forecast horizons using leave-one-run-out validation on merged 1-second runs.
+
+Horizons evaluated: 10s, 30s, 60s, 120s
+
+Average summary by horizon and model
+ horizon_seconds                   model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
+              10 Persistence (no change)        6.1005        14.9292           0.9182
+              10       Linear Regression        6.8808        14.8225           0.9198
+              10        Ridge Regression        6.8954        14.8338           0.9197
+              10           Random Forest       57.6203        69.1376          -0.4018
+              10          Mean Predictor      110.0834       121.8106          -3.1754
+              30 Persistence (no change)       12.5560        24.6063           0.8355
+              30        Ridge Regression       13.2004        22.9519           0.8491
+              30       Linear Regression       13.2017        22.9579           0.8491
+              30           Random Forest       60.9220        71.6835          -0.3427
+              30          Mean Predictor      109.3695       121.1478          -3.1115
+              60 Persistence (no change)       22.3401        38.6182           0.6310
+              60        Ridge Regression       24.5893        36.5761           0.6415
+              60       Linear Regression       24.6095        36.5979           0.6411
+              60           Random Forest       69.0740        80.7044          -0.7777
+              60          Mean Predictor      108.2688       120.0882          -3.0239
+             120 Persistence (no change)       40.3274        62.4666           0.0777
+             120        Ridge Regression       46.8754        62.1489          -0.1164
+             120       Linear Regression       46.9115        62.2222          -0.1189
+             120           Random Forest       76.7385        86.0112          -0.7478
+             120          Mean Predictor      106.0830       118.0669          -2.8831
+
+Best model by average MAE per horizon
+ horizon_seconds                   model  mean_avg_mae  mean_avg_rmse  mean_overall_r2
+              10 Persistence (no change)        6.1005        14.9292           0.9182
+              30 Persistence (no change)       12.5560        24.6063           0.8355
+              60 Persistence (no change)       22.3401        38.6182           0.6310
+             120 Persistence (no change)       40.3274        62.4666           0.0777
