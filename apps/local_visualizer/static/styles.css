@@ -276,6 +276,19 @@ button {
   transition: fill 180ms ease, stroke 180ms ease;
 }
 
+.filter rect {
+  fill: #eef5f2;
+  stroke: #58706b;
+  stroke-width: 2.5;
+}
+
+.filter text {
+  text-anchor: middle;
+  fill: var(--ink);
+  font-size: 17px;
+  font-weight: 800;
+}
+
 .ground-node rect {
   fill: #fff8e9;
   stroke: #ddc69d;

@@ -12,7 +12,7 @@
         <div>
           <p class="eyebrow">Read-only recorded-run replay</p>
           <h1>Water Testbed Visualizer</h1>
-          <p class="subtitle">Replay synchronized pump, valve, flow-channel, and tank sensor data without touching the SQLite database.</p>
+          <p class="subtitle">Replay synchronized pump, valve, controller-side channel, and tank sensor data without touching the SQLite database.</p>
         </div>
         <div class="run-controls">
           <label>
@@ -60,7 +60,7 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">System path</p>
-              <h2>Recorded water movement layout</h2>
+              <h2>Recorded testbed command layout</h2>
             </div>
             <p class="legend"><span class="legend-active"></span> active command path <span class="legend-idle"></span> inactive path</p>
           </div>
@@ -81,69 +81,78 @@
             </defs>
 
             <rect class="bay" x="36" y="42" width="1108" height="554" rx="28"/>
-            <text class="section-label" x="90" y="78">source / ground side</text>
-            <text class="section-label" x="445" y="78">treatment side</text>
-            <text class="section-label" x="805" y="78">tower distribution</text>
+            <text class="section-label" x="95" y="78">raw storage</text>
+            <text class="section-label" x="440" y="78">filter / treatment</text>
+            <text class="section-label" x="820" y="78">tower distribution</text>
+            <text class="section-label" x="455" y="600">groundwater return</text>
 
-            <path id="rawToPump1Pipe" class="pipe main-pipe" d="M190 420 C265 420 275 392 330 392"/>
-            <path id="pump1ToTreatedPipe" class="pipe main-pipe" d="M400 392 C475 392 485 352 550 352"/>
-            <path id="treatedToPump2Pipe" class="pipe main-pipe" d="M650 326 C710 304 720 250 775 220"/>
-            <path id="pump2ToTowerPipe" class="pipe main-pipe" d="M845 206 C890 180 910 150 950 132"/>
-            <path id="towerDropPipe" class="pipe branch-pipe" d="M1005 270 L1005 405"/>
-            <path id="branch2Pipe" class="pipe branch-pipe" d="M1005 332 C955 332 935 372 895 410"/>
-            <path id="branch3Pipe" class="pipe branch-pipe" d="M1005 372 C1060 372 1080 408 1110 458"/>
-            <path id="branch4Pipe" class="pipe branch-pipe" d="M1005 405 C1005 454 1005 498 1005 540"/>
+            <path id="groundToPump1Pipe" class="pipe main-pipe" d="M560 528 C440 530 330 500 275 430"/>
+            <path id="pump1ToRawPipe" class="pipe main-pipe" d="M250 360 C230 292 210 252 165 222"/>
+            <path id="rawToFilterPipe" class="pipe main-pipe" d="M220 190 H355"/>
+            <path id="filterToValve1Pipe" class="pipe main-pipe" d="M445 190 H535"/>
+            <path id="valve1ToTreatedPipe" class="pipe main-pipe" d="M580 190 C620 205 640 232 650 265"/>
+            <path id="treatedToPump2Pipe" class="pipe main-pipe" d="M685 352 H760"/>
+            <path id="pump2ToTowerPipe" class="pipe main-pipe" d="M835 332 C900 292 955 240 1005 210"/>
+            <path id="towerDropPipe" class="pipe branch-pipe" d="M1015 305 L1015 385"/>
+            <path id="branch2Pipe" class="pipe branch-pipe" d="M1015 385 C960 410 905 438 800 500"/>
+            <path id="branch3Pipe" class="pipe branch-pipe" d="M1015 425 C935 465 840 510 690 535"/>
+            <path id="branch4Pipe" class="pipe branch-pipe" d="M1015 465 C890 535 760 558 665 550"/>
 
-            <g class="ground-node" transform="translate(855 420)">
-              <rect x="0" y="0" width="300" height="108" rx="18"/>
-              <text x="150" y="42">Ground / return paths</text>
-              <text x="150" y="72">Tower outlets through V2, V3, V4</text>
+            <g class="ground-node" transform="translate(435 485)">
+              <rect x="0" y="0" width="270" height="90" rx="18"/>
+              <text x="135" y="36">Groundwater Reservoir</text>
+              <text x="135" y="62">return and Pump 1 source</text>
             </g>
 
-            <g class="pump" id="pump1Icon" transform="translate(365 392)">
+            <g class="filter" transform="translate(365 158)">
+              <rect x="0" y="0" width="92" height="64" rx="14"/>
+              <text x="46" y="39">Filter</text>
+            </g>
+
+            <g class="pump" id="pump1Icon" transform="translate(265 390)">
               <circle cx="0" cy="0" r="42"/>
               <text x="0" y="7">P1</text>
-              <text class="device-caption" x="0" y="66">raw to treated</text>
+              <text class="device-caption" x="0" y="66">ground to raw</text>
             </g>
-            <g class="pump" id="pump2Icon" transform="translate(810 210)">
+            <g class="pump" id="pump2Icon" transform="translate(800 332)">
               <circle cx="0" cy="0" r="42"/>
               <text x="0" y="7">P2</text>
               <text class="device-caption" x="0" y="66">treated to tower</text>
             </g>
 
-            <g class="valve" id="valve1Icon" transform="translate(492 366)">
+            <g class="valve" id="valve1Icon" transform="translate(555 190)">
               <polygon points="-22,-18 22,18 22,-18 -22,18"/>
               <text x="0" y="-30">V1</text>
             </g>
-            <g class="valve" id="valve2Icon" transform="translate(934 366)">
+            <g class="valve" id="valve2Icon" transform="translate(910 430)">
               <polygon points="-22,-18 22,18 22,-18 -22,18"/>
               <text x="0" y="-30">V2</text>
             </g>
-            <g class="valve" id="valve3Icon" transform="translate(1056 392)">
+            <g class="valve" id="valve3Icon" transform="translate(930 465)">
               <polygon points="-22,-18 22,18 22,-18 -22,18"/>
               <text x="0" y="-30">V3</text>
             </g>
-            <g class="valve" id="valve4Icon" transform="translate(1005 468)">
+            <g class="valve" id="valve4Icon" transform="translate(940 505)">
               <polygon points="-22,-18 22,18 22,-18 -22,18"/>
               <text x="0" y="-30">V4</text>
             </g>
 
-            <g class="tank" transform="translate(70 240)" filter="url(#softShadow)">
+            <g class="tank" transform="translate(70 92)" filter="url(#softShadow)">
               <rect class="tank-shell" width="150" height="250" rx="14"/>
               <rect id="rawFill" class="tank-fill" x="16" y="44" width="118" height="186"/>
-              <text class="tank-label" x="75" y="282">Raw / Ground</text>
+              <text class="tank-label" x="75" y="282">Raw Storage</text>
               <text id="rawValue" class="tank-value" x="75" y="310">--</text>
             </g>
-            <g class="tank" transform="translate(535 190)" filter="url(#softShadow)">
+            <g class="tank" transform="translate(535 245)" filter="url(#softShadow)">
               <rect class="tank-shell" width="150" height="250" rx="14"/>
               <rect id="treatedFill" class="tank-fill" x="16" y="44" width="118" height="186"/>
-              <text class="tank-label" x="75" y="282">Treated</text>
+              <text class="tank-label" x="75" y="282">Treated Storage</text>
               <text id="treatedValue" class="tank-value" x="75" y="310">--</text>
             </g>
-            <g class="tank tower-tank" transform="translate(940 86)" filter="url(#softShadow)">
+            <g class="tank tower-tank" transform="translate(940 68)" filter="url(#softShadow)">
               <rect class="tank-shell" width="150" height="250" rx="14"/>
               <rect id="towerFill" class="tank-fill" x="16" y="44" width="118" height="186"/>
-              <text class="tank-label" x="75" y="282">Tower</text>
+              <text class="tank-label" x="75" y="282">Water Tower</text>
               <text id="towerValue" class="tank-value" x="75" y="310">--</text>
             </g>
 
@@ -157,15 +166,15 @@
 
         <aside class="side-panel">
           <h2>Current replay row</h2>
-          <p class="side-note">Values are recorded sensor readings from the selected CSV run.</p>
+          <p class="side-note">Values are recorded controller-side channels and tank sensor readings from the selected CSV run.</p>
           <div class="metric"><span>Valve 1</span><strong id="valve1Value">Off</strong></div>
           <div class="metric"><span>Valve 2</span><strong id="valve2Value">Off</strong></div>
           <div class="metric"><span>Valve 3</span><strong id="valve3Value">Off</strong></div>
           <div class="metric"><span>Valve 4</span><strong id="valve4Value">Off</strong></div>
-          <div class="metric"><span>Pump 1 channel</span><strong id="flowP1Value">--</strong></div>
-          <div class="metric"><span>Pump 2 channel</span><strong id="flowP2Value">--</strong></div>
-          <div class="metric"><span>Valve 1 channel</span><strong id="flowValve1Value">--</strong></div>
-          <div class="metric"><span>Outlet channel</span><strong id="flowOutletValue">--</strong></div>
+          <div class="metric"><span>Pump 1 controller-side channel</span><strong id="flowP1Value">--</strong></div>
+          <div class="metric"><span>Pump 2 controller-side channel</span><strong id="flowP2Value">--</strong></div>
+          <div class="metric"><span>Valve 1 controller-side channel</span><strong id="flowValve1Value">--</strong></div>
+          <div class="metric"><span>Outlet controller-side channel</span><strong id="flowOutletValue">--</strong></div>
           <div class="metric warning-row"><span>Sensor jump</span><strong id="jumpValue">None</strong></div>
         </aside>
       </section>
@@ -176,7 +185,7 @@
             <p class="eyebrow">Tank sensor traces</p>
             <h2>Replay timeline</h2>
           </div>
-          <p><span class="chip tower-chip">Tower</span><span class="chip treated-chip">Treated</span><span class="chip raw-chip">Raw/Ground</span></p>
+          <p><span class="chip tower-chip">Tower</span><span class="chip treated-chip">Treated</span><span class="chip raw-chip">Raw Storage</span></p>
         </div>
         <input id="timeSlider" type="range" min="0" max="0" value="0">
         <canvas id="sparkline" width="1200" height="180"></canvas>

@@ -42,8 +42,11 @@ const els = {
   valve2Icon: document.getElementById("valve2Icon"),
   valve3Icon: document.getElementById("valve3Icon"),
   valve4Icon: document.getElementById("valve4Icon"),
-  rawToPump1Pipe: document.getElementById("rawToPump1Pipe"),
-  pump1ToTreatedPipe: document.getElementById("pump1ToTreatedPipe"),
+  groundToPump1Pipe: document.getElementById("groundToPump1Pipe"),
+  pump1ToRawPipe: document.getElementById("pump1ToRawPipe"),
+  rawToFilterPipe: document.getElementById("rawToFilterPipe"),
+  filterToValve1Pipe: document.getElementById("filterToValve1Pipe"),
+  valve1ToTreatedPipe: document.getElementById("valve1ToTreatedPipe"),
   treatedToPump2Pipe: document.getElementById("treatedToPump2Pipe"),
   pump2ToTowerPipe: document.getElementById("pump2ToTowerPipe"),
   towerDropPipe: document.getElementById("towerDropPipe"),
@@ -166,8 +169,11 @@ function updateFlowMarkers(row) {
   const valve3Active = isOn(row.valve3);
   const valve4Active = isOn(row.valve4);
 
-  setActive(els.rawToPump1Pipe, pump1Active);
-  setActive(els.pump1ToTreatedPipe, pump1Active || isOn(row.valve1));
+  setActive(els.groundToPump1Pipe, pump1Active);
+  setActive(els.pump1ToRawPipe, pump1Active);
+  setActive(els.rawToFilterPipe, isOn(row.valve1));
+  setActive(els.filterToValve1Pipe, isOn(row.valve1));
+  setActive(els.valve1ToTreatedPipe, isOn(row.valve1));
   setActive(els.treatedToPump2Pipe, pump2Active);
   setActive(els.pump2ToTowerPipe, pump2Active);
   setActive(els.towerDropPipe, valve2Active || valve3Active || valve4Active);
@@ -181,7 +187,7 @@ function updateFlowMarkers(row) {
   setActive(els.branch3FlowDot, valve3Active);
   setActive(els.branch4FlowDot, valve4Active);
 
-  positionMarker(els.pump1FlowDot, els.rawToPump1Pipe, state.index * 0.04);
+  positionMarker(els.pump1FlowDot, els.groundToPump1Pipe, state.index * 0.04);
   positionMarker(els.pump2FlowDot, els.pump2ToTowerPipe, state.index * 0.04);
   positionMarker(els.branch2FlowDot, els.branch2Pipe, state.index * 0.05);
   positionMarker(els.branch3FlowDot, els.branch3Pipe, state.index * 0.05);
