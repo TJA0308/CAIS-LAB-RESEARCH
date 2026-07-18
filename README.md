@@ -1,63 +1,96 @@
-# Water-Treatment Testbed Backend
+# Water-Treatment Testbed Data Pipeline
 
-This repository contains the backend pipeline for a physical water-treatment testbed.
-It stores experiment data in SQLite, imports ESP32/MATLAB controller logs, supports
-Arduino tank logging, synchronizes the streams into 1-second time-series files, and
-generates analysis outputs for reports and posters.
+This repository contains the backend software pipeline for a laboratory-scale
+water-treatment testbed. It stores raw experiment data in SQLite, imports
+ESP32/MATLAB controller logs, supports Arduino ultrasonic tank logging,
+synchronizes independent hardware streams into one-second datasets, generates
+analysis outputs, and provides a read-only browser replay interface.
 
-The raw database is preserved. Cleaning and model-ready datasets are written as
-separate CSV files in `exports/`.
+The project is focused on reproducible data collection, storage,
+synchronization, data-quality review, and visualization. It does not modify raw
+database records during cleaning or analysis.
 
-## What It Does
+## Project Summary
 
-- Creates and manages a run-indexed SQLite database.
-- Imports ESP32/MATLAB `.mat` files containing pump commands, valve states, and
-  recorded flow-channel readings.
-- Logs Arduino ultrasonic tank readings.
-- Aligns ESP32/MATLAB and Arduino data onto a shared 1-second timeline.
-- Exports merged CSVs for each run.
-- Exposes run metadata and synchronized run data through a read-only FastAPI
-  service for local tools.
-- Generates plots, anomaly/data-quality reports, run summaries, and stage summaries.
-- Builds cleaned CSV datasets for exploratory characterization work.
-- Produces poster-ready figures from existing pipeline outputs.
-
-## Architecture
+Laboratory water-treatment experiments produce data from separate hardware and
+logging systems. This repository connects those records into a run-indexed data
+pipeline:
 
 ```text
-Arduino tank readings  --->  arduino_tank_data
-                              |
-                              v
-                         SQLite database
-                              ^
-                              |
-ESP32/MATLAB .mat logs ---> esp32_matlab_data
+Sensors / Logs
+    |
+    +--> Arduino ultrasonic tank readings
+    |        -> SQLite: arduino_tank_data
+    |
+    +--> ESP32/MATLAB pump, valve, and controller-side channel logs
+             -> SQLite: esp32_matlab_data
 
-SQLite + wall-clock metadata
-        |
-        v
-exports/*_merged_timeseries.csv
-        |
-        +--> analysis/*.csv / analysis/*.txt
-        +--> plots/*.png
-        +--> exports/clean_*_model_data.csv
-        +--> FastAPI read-only API
-                  |
-                  v
-             browser replay UI
+SQLite raw database
+    -> synchronized one-second CSVs
+    -> cleaning summaries
+    -> anomaly/data-quality reports
+    -> run and stage summaries
+    -> plots
+    -> read-only FastAPI service
+    -> browser replay UI
 ```
 
-Important files:
+## Quick Start: Replay Existing Runs
 
-- `config.py`: current run settings, paths, serial settings, and display mappings.
-- `scripts/ingest/`: database setup, `.mat` import, and Arduino logging.
-- `scripts/processing/`: stream synchronization and clean model dataset creation.
-- `scripts/analysis/`: run summaries, anomaly reports, and cross-run summaries.
-- `scripts/models/`: exploratory flow and tank forecasting models.
-- `scripts/visualization/`: run plots, poster figures, and local stream helpers.
-- `apps/api/`: read-only FastAPI service for run metadata and synchronized CSVs.
-- `apps/local_visualizer/`: browser replay UI for recorded runs.
-- `scripts/utils/`: one-off inspection and metadata cleanup helpers.
+Install the API dependencies:
+
+```powershell
+pip install -r requirements-api.txt
+```
+
+Start the read-only FastAPI service:
+
+```powershell
+python -m uvicorn apps.api.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, start the replay interface:
+
+```powershell
+python apps/local_visualizer/server.py
+```
+
+Open the visualizer:
+
+```text
+http://127.0.0.1:8765
+```
+
+The replay UI loads from FastAPI first and falls back to the local CSV server if
+FastAPI is unavailable. Both paths are read-only.
+
+FastAPI docs:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Repository Structure
+
+```text
+apps/
+  api/                  Read-only FastAPI service
+  local_visualizer/      Browser replay interface
+analysis/                Generated summaries and data-quality reports
+data/
+  db/                    SQLite databases
+  raw/                   Raw MATLAB .mat files
+docs/                    Project notes and poster framing
+exports/                 Exported CSV datasets
+plots/                   Generated visualizations
+scripts/
+  ingest/                Database setup, .mat import, Arduino logging
+  processing/            Time synchronization and clean dataset creation
+  analysis/              Summaries, anomaly reports, run comparisons
+  models/                Exploratory characterization scripts
+  visualization/         Plotting and poster figure generation
+  utils/                 Inspection and maintenance helpers
+```
 
 ## Database
 
@@ -69,9 +102,9 @@ data/db/water_testbed.db
 
 Main tables:
 
-- `runs`: run metadata keyed by `run_name`.
-- `esp32_matlab_data`: controller-side time series with pump commands, valve states,
-  and flow-channel readings.
+- `runs`: experiment metadata keyed by `run_name`.
+- `esp32_matlab_data`: controller-side time series with pump commands, valve
+  states, and recorded controller-side channel readings.
 - `arduino_tank_data`: Arduino ultrasonic tank readings and raw serial lines.
 
 Tank mapping:
@@ -82,18 +115,19 @@ tank2 = treated
 tank3 = raw
 ```
 
-The database stores raw readings. Rows are not deleted by the cleaning scripts.
+The database stores raw readings. Cleaning and analysis scripts write separate
+CSV outputs and do not delete raw rows.
 
-## Operating The Pipeline
+## Main Pipeline Commands
 
-Set the current run in `config.py`:
+Set the active run in `config.py`:
 
 ```python
 RUN_NAME = "full_cycle_run_004"
 MAT_FILE = str(RAW_DATA_DIR / "full_cycle_run_004.mat")
 ```
 
-Typical workflow for a run:
+Typical workflow for one run:
 
 ```powershell
 python -m scripts.ingest.setup_db
@@ -113,58 +147,88 @@ After multiple runs are available:
 python -m scripts.analysis.compare_runs
 python -m scripts.analysis.merged_dataset_summary
 python -m scripts.processing.create_clean_model_datasets
-python -m scripts.models.flow_response_model
-python -m scripts.models.tank_forecasting_model
-python -m scripts.models.tank_forecasting_horizons
 python -m scripts.visualization.make_poster_figures
 ```
 
-## Read-Only API And Replay UI
+Exploratory characterization scripts are available in `scripts/models/`, but
+their outputs should be treated as preliminary analysis rather than validated
+physical models.
 
-Install the minimal API dependencies:
+## Read-Only API
 
-```powershell
-pip install -r requirements-api.txt
-```
+The FastAPI service exposes existing data products without changing the database
+or generated files.
 
-Run the FastAPI service:
+Run:
 
 ```powershell
 python -m uvicorn apps.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API docs are available at:
+Example requests:
 
-```text
-http://127.0.0.1:8000/docs
+```powershell
+curl.exe http://127.0.0.1:8000/health
+curl.exe http://127.0.0.1:8000/runs
+curl.exe http://127.0.0.1:8000/runs/full_cycle_run_004
+curl.exe "http://127.0.0.1:8000/runs/full_cycle_run_004/timeseries?start_s=60&end_s=65&limit=3"
 ```
 
-Run the replay interface in a second terminal:
+Endpoints:
+
+- `GET /health`
+- `GET /runs`
+- `GET /runs/{run_id}`
+- `GET /runs/{run_id}/timeseries`
+
+The API validates `run_id` against `runs.run_name` before constructing a merged
+CSV path. Some database runs do not currently have merged CSVs; those runs will
+return a clear `404` from the timeseries endpoint.
+
+## Browser Replay Interface
+
+The local replay interface is in:
+
+```text
+apps/local_visualizer/
+```
+
+Run:
 
 ```powershell
 python apps/local_visualizer/server.py
 ```
 
-Then open:
+Open:
 
 ```text
 http://127.0.0.1:8765
 ```
 
-The replay UI tries the FastAPI service first and falls back to the local CSV
-server if FastAPI is unavailable. Both paths are read-only.
+The visualizer shows:
+
+- recorded pump command states,
+- valve command states,
+- raw storage, treated storage, and tower ultrasonic tank readings,
+- controller-side channel values,
+- active command paths on the testbed schematic,
+- tank sensor traces over time,
+- sensor-jump warnings for large adjacent tank-reading changes.
+
+The visualizer is replay-only. It does not control hardware, poll live sensors,
+or write to SQLite.
 
 ## Outputs
 
-Database outputs:
+Database:
 
 - `data/db/water_testbed.db`
 
-Merged run datasets:
+Merged one-second datasets:
 
 - `exports/*_merged_timeseries.csv`
 
-Clean model datasets:
+Clean analysis datasets:
 
 - `exports/clean_esp32_model_data.csv`
 - `exports/clean_tank_forecasting_data.csv`
@@ -176,11 +240,10 @@ Analysis outputs:
 - `analysis/*_run_report.txt`
 - `analysis/*_stage_summary.csv`
 - `analysis/cleaning_summary.csv`
-- `analysis/flow_response_model_summary.txt`
-- `analysis/tank_forecasting_model_summary.txt`
-- `analysis/tank_forecasting_horizon_summary.txt`
+- `analysis/run_comparison_summary.csv`
+- `analysis/merged_dataset_summary.csv`
 
-Plot outputs:
+Plots:
 
 - `plots/*_flow_timeline.png`
 - `plots/*_pump_timeline.png`
@@ -190,10 +253,39 @@ Plot outputs:
 - `plots/architecture_diagram.png`
 - `plots/synchronized_timeline_full_cycle_run_004.png`
 
-## Notes
+## Verification
 
-- Arduino `"Error"` readings are preserved in the database and handled downstream.
-- Ultrasonic tank readings are raw sensor distances, not calibrated volumes.
-- Flow-channel readings are treated as recorded controller-side response channels;
-  they should not be overclaimed as calibrated physical flow unless validated.
-- Poster/research framing is kept in `docs/POSTER_NOTES.md`.
+Run the current test suite:
+
+```powershell
+python -m pytest
+```
+
+Check frontend syntax:
+
+```powershell
+node --check apps/local_visualizer/static/app.js
+```
+
+## Scope And Limitations
+
+- Arduino `"Error"` readings are preserved in the database and handled
+  downstream.
+- Ultrasonic tank readings are raw sensor distances, not calibrated tank
+  volumes.
+- `flow_*` fields are recorded controller-side channels. They should not be
+  described as calibrated physical flow measurements unless independent
+  calibration is added.
+- The replay UI is read-only and uses recorded runs only.
+- This repository does not implement a validated digital twin or an autonomous
+  controller.
+
+## Future Work
+
+- Calibrate ultrasonic tank readings against measured water height or volume.
+- Validate a first-principles tank model using inflow, outflow, elapsed time,
+  and tank geometry.
+- Collect replicated controlled runs for cross-run validation.
+- Add live visualization only after the read-only replay workflow is stable.
+- Compare exploratory learned models against first-principles baselines only
+  after sensor and flow calibration are available.

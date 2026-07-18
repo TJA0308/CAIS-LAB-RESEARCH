@@ -2,9 +2,15 @@ import csv
 import sqlite3
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 from apps.api.main import create_app
+
+
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
 
 
 def make_test_db(path: Path) -> None:
@@ -127,17 +133,19 @@ def make_timeseries(export_dir: Path) -> None:
             )
 
 
-def make_client(tmp_path: Path) -> TestClient:
+def make_app(tmp_path: Path):
     db_path = tmp_path / "water_testbed_test.db"
     export_dir = tmp_path / "exports"
     make_test_db(db_path)
     make_timeseries(export_dir)
-    return TestClient(create_app(db_path=db_path, export_dir=export_dir))
+    return create_app(db_path=db_path, export_dir=export_dir)
 
 
-def test_health_uses_fixture_database(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/health")
+@pytest.mark.anyio
+async def test_health_uses_fixture_database(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/health")
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "ok"
@@ -145,18 +153,22 @@ def test_health_uses_fixture_database(tmp_path: Path) -> None:
     assert payload["database_path"].endswith("water_testbed_test.db")
 
 
-def test_list_runs(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/runs")
+@pytest.mark.anyio
+async def test_list_runs(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/runs")
     assert response.status_code == 200
     payload = response.json()
     assert payload["runs"][0]["run_id"] == "test_run_001"
     assert payload["runs"][0]["has_timeseries"] is True
 
 
-def test_valid_run_detail(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/runs/test_run_001")
+@pytest.mark.anyio
+async def test_valid_run_detail(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/runs/test_run_001")
     assert response.status_code == 200
     payload = response.json()
     assert payload["run_id"] == "test_run_001"
@@ -164,16 +176,20 @@ def test_valid_run_detail(tmp_path: Path) -> None:
     assert payload["arduino_rows"] == 1
 
 
-def test_invalid_run_id_returns_404(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/runs/not_a_run")
+@pytest.mark.anyio
+async def test_invalid_run_id_returns_404(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/runs/not_a_run")
     assert response.status_code == 404
     assert response.json()["detail"] == "Run not found: not_a_run"
 
 
-def test_timeseries_filters_and_limits(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/runs/test_run_001/timeseries?start_s=1&end_s=3&limit=2")
+@pytest.mark.anyio
+async def test_timeseries_filters_and_limits(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/runs/test_run_001/timeseries?start_s=1&end_s=3&limit=2")
     assert response.status_code == 200
     payload = response.json()
     assert payload["returned_rows"] == 2
@@ -181,8 +197,10 @@ def test_timeseries_filters_and_limits(tmp_path: Path) -> None:
     assert [row["t_seconds"] for row in payload["rows"]] == [1.0, 2.0]
 
 
-def test_timeseries_invalid_range_returns_422(tmp_path: Path) -> None:
-    client = make_client(tmp_path)
-    response = client.get("/runs/test_run_001/timeseries?start_s=3&end_s=1")
+@pytest.mark.anyio
+async def test_timeseries_invalid_range_returns_422(tmp_path: Path) -> None:
+    transport = ASGITransport(app=make_app(tmp_path))
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/runs/test_run_001/timeseries?start_s=3&end_s=1")
     assert response.status_code == 422
     assert response.json()["detail"] == "start_s must be less than or equal to end_s"
