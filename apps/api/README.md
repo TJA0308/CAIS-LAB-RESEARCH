@@ -48,3 +48,16 @@ curl.exe "http://127.0.0.1:8000/runs/full_cycle_run_004/timeseries?start_s=60&en
 
 `run_id` is validated against the SQLite `runs.run_name` column before any
 merged CSV path is constructed.
+
+## Data Sources
+
+- Run metadata and raw row counts come from `data/db/water_testbed.db`.
+- Synchronized replay rows come from `exports/{run_id}_merged_timeseries.csv`.
+- The API opens SQLite in read-only mode and does not modify database contents.
+
+Some database runs do not currently have merged CSVs. Those runs will appear in
+`GET /runs` with `has_timeseries=false`, and `/runs/{run_id}/timeseries` will
+return a clear `404`.
+
+The `flow_*` fields are controller-side channels from the recorded logs. Treat
+them as recorded response channels, not calibrated physical flow measurements.

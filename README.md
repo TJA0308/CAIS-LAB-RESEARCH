@@ -16,8 +16,10 @@ separate CSV files in `exports/`.
 - Logs Arduino ultrasonic tank readings.
 - Aligns ESP32/MATLAB and Arduino data onto a shared 1-second timeline.
 - Exports merged CSVs for each run.
+- Exposes run metadata and synchronized run data through a read-only FastAPI
+  service for local tools.
 - Generates plots, anomaly/data-quality reports, run summaries, and stage summaries.
-- Builds cleaned CSV datasets for exploratory ML and digital-twin forecasting work.
+- Builds cleaned CSV datasets for exploratory characterization work.
 - Produces poster-ready figures from existing pipeline outputs.
 
 ## Architecture
@@ -39,6 +41,10 @@ exports/*_merged_timeseries.csv
         +--> analysis/*.csv / analysis/*.txt
         +--> plots/*.png
         +--> exports/clean_*_model_data.csv
+        +--> FastAPI read-only API
+                  |
+                  v
+             browser replay UI
 ```
 
 Important files:
@@ -49,6 +55,8 @@ Important files:
 - `scripts/analysis/`: run summaries, anomaly reports, and cross-run summaries.
 - `scripts/models/`: exploratory flow and tank forecasting models.
 - `scripts/visualization/`: run plots, poster figures, and local stream helpers.
+- `apps/api/`: read-only FastAPI service for run metadata and synchronized CSVs.
+- `apps/local_visualizer/`: browser replay UI for recorded runs.
 - `scripts/utils/`: one-off inspection and metadata cleanup helpers.
 
 ## Database
@@ -110,6 +118,41 @@ python -m scripts.models.tank_forecasting_model
 python -m scripts.models.tank_forecasting_horizons
 python -m scripts.visualization.make_poster_figures
 ```
+
+## Read-Only API And Replay UI
+
+Install the minimal API dependencies:
+
+```powershell
+pip install -r requirements-api.txt
+```
+
+Run the FastAPI service:
+
+```powershell
+python -m uvicorn apps.api.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The API docs are available at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Run the replay interface in a second terminal:
+
+```powershell
+python apps/local_visualizer/server.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765
+```
+
+The replay UI tries the FastAPI service first and falls back to the local CSV
+server if FastAPI is unavailable. Both paths are read-only.
 
 ## Outputs
 
