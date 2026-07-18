@@ -1,5 +1,6 @@
 const TANK_KEYS = ["tower", "treated", "raw"];
 const SENSOR_JUMP_THRESHOLD = 300;
+const API_BASE = "http://127.0.0.1:8000";
 
 const state = {
   runs: [],
@@ -56,6 +57,40 @@ const els = {
   branch4FlowDot: document.getElementById("branch4FlowDot"),
   sparkline: document.getElementById("sparkline"),
 };
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`${url} returned ${response.status}`);
+  }
+  return response.json();
+}
+
+function normalizeRun(run) {
+  return {
+    run_name: run.run_name || run.run_id,
+    rows: run.rows,
+    duration_seconds: run.duration_seconds,
+    has_timeseries: run.has_timeseries,
+  };
+}
+
+async function withFastApiRowCount(run) {
+  if (!run.run_name || run.has_timeseries === false || Number.isInteger(run.rows)) {
+    return run;
+  }
+
+  try {
+    const payload = await fetchJson(`${API_BASE}/runs/${encodeURIComponent(run.run_name)}/timeseries?limit=1`);
+    return {
+      ...run,
+      rows: payload.total_matching_rows,
+    };
+  } catch (error) {
+    console.warn(`Unable to load row count for ${run.run_name}.`, error);
+    return run;
+  }
+}
 
 function finiteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
@@ -256,14 +291,34 @@ function drawSparkline() {
 }
 
 async function loadRuns() {
-  const response = await fetch("/api/runs");
-  const payload = await response.json();
-  state.runs = payload.runs;
+  let payload;
+  try {
+    payload = await fetchJson(`${API_BASE}/runs`);
+  } catch (apiError) {
+    console.warn("FastAPI run list unavailable; falling back to local CSV server.", apiError);
+    try {
+      payload = await fetchJson("/api/runs");
+    } catch (fallbackError) {
+      throw new Error(`Unable to load runs from FastAPI or local fallback: ${fallbackError.message}`);
+    }
+  }
+
+  const runs = (payload.runs || [])
+    .map(normalizeRun)
+    .filter(run => run.run_name && run.has_timeseries !== false);
+
+  state.runs = await Promise.all(runs.map(withFastApiRowCount));
+
+  if (!state.runs.length) {
+    throw new Error("No replayable runs were returned by FastAPI or the local fallback.");
+  }
+
   els.runSelect.innerHTML = "";
   for (const run of state.runs) {
     const option = document.createElement("option");
     option.value = run.run_name;
-    option.textContent = `${run.run_name} (${run.rows} rows)`;
+    const rowText = Number.isInteger(run.rows) ? `${run.rows} rows` : "timeseries";
+    option.textContent = `${run.run_name} (${rowText})`;
     els.runSelect.appendChild(option);
   }
   const preferred = state.runs.find(run => run.run_name === "full_cycle_run_004");
@@ -273,9 +328,23 @@ async function loadRuns() {
 
 async function loadRun(runName) {
   stop();
-  const response = await fetch(`/api/run?name=${encodeURIComponent(runName)}`);
-  const payload = await response.json();
+  let payload;
+  try {
+    payload = await fetchJson(`${API_BASE}/runs/${encodeURIComponent(runName)}/timeseries`);
+  } catch (apiError) {
+    console.warn(`FastAPI timeseries unavailable for ${runName}; falling back to local CSV server.`, apiError);
+    try {
+      payload = await fetchJson(`/api/run?name=${encodeURIComponent(runName)}`);
+    } catch (fallbackError) {
+      throw new Error(`Unable to load ${runName} from FastAPI or local fallback: ${fallbackError.message}`);
+    }
+  }
+
   state.rows = payload.rows || [];
+  if (!state.rows.length) {
+    throw new Error(`No replay rows returned for ${runName}.`);
+  }
+
   state.index = 0;
   els.timeSlider.max = String(Math.max(0, state.rows.length - 1));
   computeTankRanges();
@@ -320,7 +389,12 @@ els.timeSlider.addEventListener("input", event => {
 
 loadRuns().catch(error => {
   console.error(error);
+  els.runSelect.innerHTML = "";
+  const option = document.createElement("option");
+  option.textContent = "Data sources unavailable";
+  els.runSelect.appendChild(option);
+  els.playButton.disabled = true;
   els.systemState.textContent = "Load error";
   els.systemState.style.color = "var(--red)";
-  setQuality(false, "Load error");
+  setQuality(false, "Data load failed");
 });
