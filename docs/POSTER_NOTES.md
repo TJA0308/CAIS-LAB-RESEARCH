@@ -4,114 +4,123 @@
 
 Main claim:
 
-> We built a reproducible backend for a water-treatment testbed that stores raw
-> experiment data, synchronizes independent hardware streams, creates clean
-> model-ready datasets, and supports visual analytics for future digital-twin work.
+> This project built a reproducible data pipeline for a laboratory
+> water-treatment testbed that stores raw experiment data, synchronizes
+> independent hardware streams, exposes recorded runs through a read-only API,
+> and supports visual replay and data-quality review.
 
-This is the safest poster framing because it is directly supported by the code and
-data products in this repository.
+This framing is directly supported by the repository and avoids overclaiming
+model validation or autonomous control.
 
 ## What To Emphasize
 
-- Data collection architecture: Arduino tank sensors plus ESP32/MATLAB controller logs.
-- SQLite experiment database with run-indexed raw data.
-- Wall-clock synchronization into 1-second merged time-series CSVs.
-- Auditable cleaning that preserves raw database records.
-- Poster-ready plots and summaries generated from the same pipeline.
-- Initial ML work as exploratory backend validation and forecasting analysis.
+- Data collection architecture: Arduino ultrasonic tank readings plus
+  ESP32/MATLAB controller logs.
+- SQLite database with raw, run-indexed experiment records.
+- Synchronization into one-second merged CSV files.
+- Cleaning and analysis outputs that preserve raw database records.
+- Rule-based data-quality checks and run/stage summaries.
+- Read-only FastAPI service for run metadata and synchronized timeseries access.
+- Browser replay interface for recorded experimental runs.
 
 ## Suggested Poster Sections
 
 1. Problem and goal
-   - A physical water-treatment testbed produces separate tank, pump, valve, and
-     flow-channel streams.
-   - The goal is to create a reproducible backend for analysis and future digital-twin
-     visualization.
+   - Laboratory testbed data is produced by separate sensors, controllers, and
+     logging systems.
+   - The goal is to make recorded runs easier to synchronize, inspect, compare,
+     and reuse.
 
-2. Backend architecture
-   - Show `plots/architecture_diagram.png`.
-   - Explain how `.mat` controller logs and Arduino readings enter SQLite.
+2. System architecture
+   - Show the pipeline from sensors/logs to SQLite, merged CSVs, FastAPI, and
+     replay UI.
 
-3. Synchronized system data
-   - Show `plots/synchronized_timeline_full_cycle_run_004.png`.
-   - Use this as the strongest evidence that the backend integrates the system state.
+3. Data pipeline
+   - Explain `.mat` import, Arduino logging, run identifiers, and raw database
+     preservation.
 
-4. Data quality and cleaning
-   - Mention raw data is preserved.
-   - Cleaning outputs are separate CSV files.
-   - `analysis/cleaning_summary.csv` logs rows removed and why.
+4. Synchronized system data
+   - Show a one-second synchronized timeline for `full_cycle_run_004`.
 
-5. Exploratory models
-   - Flow-channel response modeling predicts recorded response channels from controls.
-   - Do not overclaim calibrated physical flow unless the lab confirms the readings.
-   - Tank forecasting is the more relevant digital-twin direction, but current
-     short-horizon results are persistence-dominated.
+5. Data-quality review
+   - Show cleaning summaries, anomaly/data-quality rules, and run/stage
+     summaries.
 
-6. Future work
-   - Local frontend/dashboard that reads SQLite and animates tank levels.
-   - ProtoTwin/MQTT visualization layer.
-   - Tank forecast horizons, delta targets, and future control-conditioned rollouts.
-   - Sensor-to-volume calibration.
-   - More independent and replicated runs.
+6. Replay interface
+   - Show the browser visualizer as a read-only recorded-run replay tool.
 
-## ML Framing
+7. Limitations and future work
+   - Sensor calibration, first-principles tank modeling, replicated runs, and
+     live visualization remain future work.
 
-Flow-response model:
+## Preliminary Analysis Framing
 
-- Useful as an exploratory backend validation task.
-- Best current static Random Forest result: about R2 0.77 and MAE 1.75 across 7
-  leave-one-run-out folds.
-- Separate temporal-feature analysis on merged runs improves Random Forest from
-  R2 0.757 to 0.827 and MAE 1.472 to 1.145.
-- Phrase carefully: "recorded flow-channel response", not "true physical flow",
-  unless the sensor/channel calibration is validated.
+If modeling outputs are mentioned, use cautious wording:
 
-Tank forecasting:
+- Existing flow-response scripts estimate recorded controller-side `flow_*`
+  channel values from pump PWM and valve command histories.
+- This is preliminary open-loop input-output characterization, not calibrated
+  physical flow prediction.
+- Existing tank-forecasting results are exploratory and do not validate a
+  predictive digital twin.
+- Short-horizon tank forecasting should be compared against persistence and
+  first-principles mass-balance models before stronger claims are made.
 
-- Better aligned with the lab's digital-twin goal because it predicts tank-level
-  evolution.
-- 10-second forecasting is dominated by persistence because tank levels change slowly.
-- Persistence baseline MAE is about 6.10; Linear/Ridge are about 6.88 to 6.90.
-- A horizon sweep at 10, 30, 60, and 120 seconds still shows persistence as the
-  best MAE baseline on current data. The gap increases at longer horizons, which
-  suggests the current runs do not contain enough repeated, in-distribution tank
-  dynamics for learned models to generalize.
-- This is a useful finding: future work needs longer horizons, delta targets,
-  future control schedules, or more replicated protocols.
+Avoid:
 
-## Plots To Use
+- "AI-powered controller"
+- "validated predictive digital twin"
+- "physical flow prediction"
+- "autonomous control"
+- "validated model"
+
+## Strongest Visuals
 
 Primary:
 
 - `plots/architecture_diagram.png`
 - `plots/synchronized_timeline_full_cycle_run_004.png`
+- Browser replay interface screenshot, if captured after running the local demo.
 
-Optional / supporting:
+Supporting:
 
-- `plots/flow_response_model_results.png`
-- `plots/flow_prediction_overlay_full_cycle_run_002.png`
-- `plots/tank_forecasting_model_results.png`
-- `plots/flow_feature_importance.png`
+- `plots/full_cycle_run_004_combined_timeline.png`
+- `analysis/cleaning_summary.csv`
+- `analysis/run_comparison_summary.csv`
+- `plots/tank_forecasting_model_results.png`, only if framed as exploratory.
+- `plots/flow_response_model_results.png`, only if framed as exploratory.
 
-## Suggested Captions
+## Poster-Safe Captions
 
 Architecture:
 
-> Run-indexed backend architecture: Arduino tank readings and ESP32/MATLAB controller
-> logs are stored in SQLite, synchronized to 1-second time series, and exported for
-> analysis, cleaning, plotting, and exploratory forecasting.
+> Run-indexed data pipeline for the water-treatment testbed: ESP32/MATLAB
+> controller logs and Arduino ultrasonic tank readings are stored in SQLite,
+> synchronized into one-second CSVs, and exposed through a read-only API and
+> recorded-run replay interface.
 
 Synchronized timeline:
 
-> Wall-clock synchronized run showing pump commands, valve states, recorded flow-channel
-> response, and raw ultrasonic tank readings on one shared 1-second axis.
+> One-second synchronized run showing pump commands, valve states, recorded
+> controller-side channel values, and raw ultrasonic tank readings on a shared
+> time axis.
+
+Replay interface:
+
+> Read-only browser replay of a recorded testbed run, showing command states,
+> tank sensor readings, controller-side channel values, and active command paths.
+
+Data-quality summary:
+
+> Cleaning and data-quality outputs are generated as separate analysis files so
+> raw SQLite records remain unchanged.
+
+Exploratory flow characterization:
+
+> Preliminary open-loop characterization estimating recorded controller-side
+> channel values from pump and valve command histories.
 
 Tank forecasting:
 
-> Short-horizon tank forecasting is persistence-dominated: current tank reading is a
-> strong 10-second baseline, motivating longer-horizon and control-conditioned models.
-
-Flow exploratory model:
-
-> Exploratory model predicting recorded flow-channel response from pump and valve
-> commands; temporal control history improves held-out performance.
+> Exploratory short-horizon tank forecasting did not establish a validated
+> predictive model and motivates calibration and first-principles modeling.

@@ -1,41 +1,65 @@
 # Project Status
 
-## Working (backend intelligence layer)
-- SQLite schema + run-indexed experiment tracking (~15.4K controller, ~14.1K tank rows)
-- Arduino tank logging; MATLAB .mat import
-- Wall-clock synchronization -> merged 1-second time-series (6 runs)
-- Auditable cleaning (raw vs clean, per-run drop logging)
-- Time-series plotting, rule-based anomaly/data-quality detection, run/stage summaries
-- Flow-response model: 7-run leave-one-run-out, RF R2 0.77 / MAE 1.75 (generalizes)
-- Tank forecasting: 6-run LORO, honestly reported vs a persistence baseline
-- Tank horizon sweep: 10/30/60/120s evaluated; persistence remains best by MAE
-- Poster figures: architecture, synchronized timeline, flow overlay, model charts, feature importance
+## Working
 
-## Explored (validated, ready to fold in later)
-- Temporal features improve the flow model (RF R2 0.77 -> 0.83); see
-  `scripts/models/flow_temporal_features.py`
-- Tank forecasting cannot beat persistence on current data via longer horizons
-  -> a data-coverage/design limit, not a bug
+- SQLite schema and run-indexed experiment tracking.
+- ESP32/MATLAB `.mat` import for pump commands, valve states, timestamps, and
+  recorded controller-side channel readings.
+- Arduino ultrasonic tank-sensor logging with raw serial lines preserved.
+- Synchronization of controller and tank streams into one-second merged CSVs for
+  runs with available data.
+- Separate clean analysis CSVs that preserve the raw database.
+- Rule-based anomaly/data-quality reports.
+- Run reports, stage summaries, merged dataset summaries, and cross-run
+  comparisons.
+- Generated plots and poster figures from existing pipeline outputs.
+- Read-only FastAPI service for run metadata and synchronized timeseries access.
+- Browser replay visualizer with FastAPI-first loading and local CSV fallback.
 
-## Poster-ready runs
-- full_cycle_run_004 (hero), full_cycle_run_002, valve_routing_run_001, pump_pwm_sweep_run_001
+## Current Demo Run
 
-## Exclude from results
-- config_test_001 (duplicate of combined_run_001), arduino_test_001 (orphan)
+- `full_cycle_run_004` is the strongest recorded-run demo:
+  - merged CSV: `exports/full_cycle_run_004_merged_timeseries.csv`
+  - row count: 971 one-second rows
+  - time column: `t_seconds`
+  - visualizer loads the run through FastAPI and local CSV fallback.
 
-## ProtoTwin / digital-twin visualization (FUTURE WORK)
-- Status: the live ProtoTwin 3-D / TypeScript frontend is NOT working yet.
-- What is done: the backend already emits a ProtoTwin-ready 1-second JSON state
-  stream. `scripts/visualization/prototwin_stream.py` replays a merged run to an MQTT topic
-  (dry-run by default; `--broker` to publish). This proves the integration path.
-- Minimal next step: subscribe one ProtoTwin element (e.g., a single tank level)
-  to `water_testbed/state` and drive it from a real run before attempting the full scene.
-- Framing: the digital-twin *backend* (synchronized state history + validated models)
-  works; the visualization *frontend* is the remaining layer.
+## Runs With Merged CSVs
 
-## Remaining / next
-- (Optional) fold temporal features into the main flow model on merged data
-- (Optional) sensor -> volume calibration; delta tank modeling
-- Collect 1-2 targeted runs: one long combined pump+valve run; one protocol replicate
-- ProtoTwin: wire one live element via MQTT
-- Commit + push after tomorrow's meeting
+- `full_cycle_run_002`
+- `full_cycle_run_003`
+- `full_cycle_run_004`
+- `pump_pwm_sweep_run_001`
+- `pump_pwm_sweep_run_002`
+- `valve_routing_run_001`
+
+## Database Runs Without Merged CSVs
+
+These runs exist in `runs` but do not currently have matching
+`exports/{run_name}_merged_timeseries.csv` files:
+
+- `combined_run_001`
+- `config_test_001`
+- `full_cycle_run_001`
+- `live_water_test_1`
+- `pump1_onoff_run_002`
+
+## Exploratory Analysis
+
+- Existing scripts in `scripts/models/` contain preliminary input-output
+  characterization and tank-forecasting experiments.
+- These outputs should not be presented as a validated predictive digital twin,
+  autonomous controller, or calibrated physical model.
+- `flow_*` fields should be described as recorded controller-side channels, not
+  calibrated physical flow measurements.
+- Tank readings are raw ultrasonic distances, not calibrated volumes.
+
+## Future Work
+
+- Calibrate ultrasonic tank readings against measured water height or volume.
+- Validate a first-principles tank model using inflow, outflow, elapsed time,
+  and tank geometry.
+- Collect replicated controlled runs for validation.
+- Add live visualization only after the recorded-run workflow is stable.
+- Compare exploratory learned models against first-principles baselines only
+  after sensor and flow calibration are available.
