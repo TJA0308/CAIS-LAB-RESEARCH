@@ -9,10 +9,10 @@ OUTPUT_DIR = Path(ANALYSIS_DIR)
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 # -------------------------------------------------
-# Choose which runs to include in the poster summary
+# Choose which runs to include in the run comparison summary.
 # Edit this list as you collect more clean runs.
 # -------------------------------------------------
-POSTER_RUNS = [
+SUMMARY_RUNS = [
     "full_cycle_run_001",
     "full_cycle_run_002",
     "full_cycle_run_003",
@@ -21,7 +21,7 @@ POSTER_RUNS = [
 ]
 
 # Optional: include validation/debug runs if needed
-INCLUDE_ONLY_POSTER_RUNS = True
+INCLUDE_ONLY_SUMMARY_RUNS = True
 
 
 def read_table(conn, query, params=None):
@@ -42,10 +42,10 @@ runs = read_table(conn, "SELECT * FROM runs")
 
 conn.close()
 
-if INCLUDE_ONLY_POSTER_RUNS:
-    esp32 = esp32[esp32["run_name"].isin(POSTER_RUNS)]
-    arduino = arduino[arduino["run_name"].isin(POSTER_RUNS)]
-    runs = runs[runs["run_name"].isin(POSTER_RUNS)]
+if INCLUDE_ONLY_SUMMARY_RUNS:
+    esp32 = esp32[esp32["run_name"].isin(SUMMARY_RUNS)]
+    arduino = arduino[arduino["run_name"].isin(SUMMARY_RUNS)]
+    runs = runs[runs["run_name"].isin(SUMMARY_RUNS)]
 
 all_run_names = sorted(
     set(esp32["run_name"].dropna().unique()).union(
@@ -203,11 +203,11 @@ for run_name in all_run_names:
 
 summary = pd.DataFrame(summary_rows)
 
-# Put clean poster runs first if they exist
-summary["poster_priority"] = summary["run_name"].apply(
-    lambda x: POSTER_RUNS.index(x) if x in POSTER_RUNS else 999
+# Put selected summary runs first if they exist.
+summary["summary_priority"] = summary["run_name"].apply(
+    lambda x: SUMMARY_RUNS.index(x) if x in SUMMARY_RUNS else 999
 )
-summary = summary.sort_values(["poster_priority", "run_name"]).drop(columns=["poster_priority"])
+summary = summary.sort_values(["summary_priority", "run_name"]).drop(columns=["summary_priority"])
 
 output_file = OUTPUT_DIR / "run_comparison_summary.csv"
 summary.to_csv(output_file, index=False)

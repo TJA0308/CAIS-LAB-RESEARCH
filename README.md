@@ -80,7 +80,7 @@ analysis/                Generated summaries and data-quality reports
 data/
   db/                    SQLite databases
   raw/                   Raw MATLAB .mat files
-docs/                    Project notes and poster framing
+docs/                    Project status notes
 exports/                 Exported CSV datasets
 plots/                   Generated visualizations
 scripts/
@@ -88,7 +88,7 @@ scripts/
   processing/            Time synchronization and clean dataset creation
   analysis/              Summaries, anomaly reports, run comparisons
   models/                Exploratory characterization scripts
-  visualization/         Plotting and poster figure generation
+  visualization/         Plotting and report figure generation
   utils/                 Inspection and maintenance helpers
 ```
 
@@ -147,7 +147,7 @@ After multiple runs are available:
 python -m scripts.analysis.compare_runs
 python -m scripts.analysis.merged_dataset_summary
 python -m scripts.processing.create_clean_model_datasets
-python -m scripts.visualization.make_poster_figures
+python -m scripts.visualization.make_report_figures
 ```
 
 Exploratory characterization scripts are available in `scripts/models/`, but
@@ -224,14 +224,33 @@ Database:
 
 - `data/db/water_testbed.db`
 
+Raw exported tables:
+
+- `exports/esp32_matlab_data.csv`: export of controller-side records from
+  `esp32_matlab_data`, including pump commands, valve states, timestamps, and
+  recorded controller-side `flow_*` channel values.
+- `exports/arduino_tank_data.csv`: export of Arduino tank readings from
+  `arduino_tank_data`, including raw serial lines and ultrasonic readings.
+- `exports/esp32_summary_by_run.csv`, `exports/arduino_summary_by_run.csv`,
+  and `exports/arduino_summary_mapped_by_run.csv`: row-count and run-level
+  summaries for exported raw records.
+
 Merged one-second datasets:
 
 - `exports/*_merged_timeseries.csv`
+
+These are synchronized replay datasets keyed by `run_name` and `t_seconds`.
+They combine pump commands, valve states, controller-side channel values, and
+tank readings onto a shared one-second timeline where both data streams are
+available.
 
 Clean analysis datasets:
 
 - `exports/clean_esp32_model_data.csv`
 - `exports/clean_tank_forecasting_data.csv`
+
+These files are derived analysis copies. They do not replace or modify raw
+database records.
 
 Analysis outputs:
 
@@ -253,6 +272,10 @@ Plots:
 - `plots/architecture_diagram.png`
 - `plots/synchronized_timeline_full_cycle_run_004.png`
 
+The historical `flow` filename prefix is retained for compatibility with
+existing scripts, but these plots should be interpreted as controller-side
+channel timelines unless independent physical flow sensors are added.
+
 ## Verification
 
 Run the current test suite:
@@ -273,9 +296,9 @@ node --check apps/local_visualizer/static/app.js
   downstream.
 - Ultrasonic tank readings are raw sensor distances, not calibrated tank
   volumes.
-- `flow_*` fields are recorded controller-side channels. They should not be
-  described as calibrated physical flow measurements unless independent
-  calibration is added.
+- `flow_*` fields are recorded controller-side channels from the ESP32/MATLAB
+  logs. They are not calibrated physical flow measurements and should not be
+  described as flow-sensor data.
 - The replay UI is read-only and uses recorded runs only.
 - This repository does not implement a validated digital twin or an autonomous
   controller.
@@ -288,4 +311,5 @@ node --check apps/local_visualizer/static/app.js
 - Collect replicated controlled runs for cross-run validation.
 - Add live visualization only after the read-only replay workflow is stable.
 - Compare exploratory learned models against first-principles baselines only
-  after sensor and flow calibration are available.
+  after sensor calibration and physical inflow/outflow measurements are
+  available.

@@ -48,7 +48,7 @@ FROM arduino_tank_data
 GROUP BY run_name
 """, conn)
 
-# Same data with readable tank labels for sharing/poster use.
+# Same data with readable tank labels for sharing and reports.
 arduino_mapped_summary = arduino_summary.rename(columns={
     "avg_tank1": "avg_tower",
     "avg_tank2": "avg_treated",

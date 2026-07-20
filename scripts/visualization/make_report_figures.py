@@ -1,10 +1,10 @@
 """
-Generate poster / presentation figures from existing pipeline outputs.
+Generate report / presentation figures from existing pipeline outputs.
 
 Produces PNGs in plots/:
-  1. synchronized_timeline_<run>.png       - pump/valve/flow/tank on one wall-clock axis
-  2. flow_response_model_results.png        - LORO MAE and R2 by model
-  3. flow_prediction_overlay_<run>.png      - held-out predicted vs measured flow
+  1. synchronized_timeline_<run>.png       - pump/valve/channel/tank on one wall-clock axis
+  2. flow_response_model_results.png        - LORO MAE and R2 by model for controller-side channels
+  3. flow_prediction_overlay_<run>.png      - held-out predicted vs recorded channel values
   4. tank_forecasting_model_results.png     - LORO MAE and R2 by model (with persistence)
   5. architecture_diagram.png               - data-flow / system architecture
 
@@ -67,7 +67,7 @@ def synchronized_timeline(run_name=SYNC_RUN):
     fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(12, 11), sharex=True)
     fig.suptitle(
         f"Wall-Clock Synchronized System Timeline - {run_name}\n"
-        "Arduino tanks + ESP32/MATLAB controls & flow on one 1-second axis",
+        "Arduino tanks + ESP32/MATLAB commands and channels on one 1-second axis",
         fontsize=15,
     )
 
@@ -82,12 +82,12 @@ def synchronized_timeline(run_name=SYNC_RUN):
     axes[1].set_yticks([0, 1])
     axes[1].set_title("Valve States")
 
-    axes[2].plot(t, data["flow_p1"], label="Pump 1 flow")
-    axes[2].plot(t, data["flow_p2"], label="Pump 2 flow")
-    axes[2].plot(t, data["flow_valve1"], label="Valve 1 flow")
-    axes[2].plot(t, data["flow_outlet"], label="Outlet flow")
-    axes[2].set_ylabel("Flow reading")
-    axes[2].set_title("Flow Response")
+    axes[2].plot(t, data["flow_p1"], label="Pump 1 channel")
+    axes[2].plot(t, data["flow_p2"], label="Pump 2 channel")
+    axes[2].plot(t, data["flow_valve1"], label="Valve 1 channel")
+    axes[2].plot(t, data["flow_outlet"], label="Outlet channel")
+    axes[2].set_ylabel("Recorded channel")
+    axes[2].set_title("Controller-Side Channel Readings")
 
     for tank in TANK_COLUMNS:
         axes[3].plot(t, despike_for_plot(data[tank]), label=tank.title())
@@ -322,9 +322,9 @@ def flow_prediction_overlay(run_name=FLOW_OVERLAY_RUN):
 
     t = test_data["timestamp"] - test_data["timestamp"].min()
     channels = [
-        ("flow_p1", "Pump 1 flow"),
-        ("flow_p2", "Pump 2 flow"),
-        ("flow_outlet", "Outlet flow"),
+        ("flow_p1", "Pump 1 channel"),
+        ("flow_p2", "Pump 2 channel"),
+        ("flow_outlet", "Outlet channel"),
     ]
 
     fig, axes = plt.subplots(len(channels), 1, figsize=(12, 7.5), sharex=True)
@@ -424,11 +424,11 @@ def architecture_diagram():
     ml = "#fbe6cc"
 
     box(0.3, 4.4, 2.6, 1.4, "Arduino UNO\nultrasonic tank\nsensors", sensor)
-    box(0.3, 1.0, 2.6, 1.4, "ESP32 / MATLAB\npump, valve,\nflow logs (.mat)", sensor)
+    box(0.3, 1.0, 2.6, 1.4, "ESP32 / MATLAB\npump, valve,\nchannel logs (.mat)", sensor)
     box(3.6, 2.7, 2.4, 1.6, "SQLite\nwater_testbed.db\nrun-indexed\n29K+ rows", store)
     box(6.6, 4.4, 2.4, 1.4, "Wall-clock sync\n-> merged 1-s\ntime-series", proc)
     box(6.6, 1.0, 2.4, 1.4, "Cleaning +\nanomaly / data-\nquality flags", proc)
-    box(9.5, 4.4, 2.2, 1.4, "Flow-response\nmodel (LORO)", ml)
+    box(9.5, 4.4, 2.2, 1.4, "Channel-response\ncharacterization\n(LORO)", ml)
     box(9.5, 1.0, 2.2, 1.4, "Tank forecast\n(LORO, vs\npersistence)", ml)
     box(9.5, 2.75, 2.2, 1.2, "Plots, reports,\nsummary tables", proc)
 
@@ -456,7 +456,7 @@ def main():
     synchronized_timeline()
     model_results_bar(
         Path(ANALYSIS_DIR) / "flow_response_model_results.csv",
-        "Flow-Response Model - Leave-One-Run-Out Validation",
+        "Controller-Side Channel Response - Leave-One-Run-Out Validation",
         "flow_response_model_results.png",
         baseline_names={"Mean Predictor"},
     )

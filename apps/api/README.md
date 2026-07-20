@@ -59,5 +59,15 @@ Some database runs do not currently have merged CSVs. Those runs will appear in
 `GET /runs` with `has_timeseries=false`, and `/runs/{run_id}/timeseries` will
 return a clear `404`.
 
-The `flow_*` fields are controller-side channels from the recorded logs. Treat
-them as recorded response channels, not calibrated physical flow measurements.
+## Response Notes
+
+Timeseries rows use the same column names as the merged CSV files:
+
+- `pump1_pwm`, `pump2_pwm`: recorded pump command values.
+- `valve1` through `valve4`: recorded valve command states.
+- `tower`, `treated`, `raw`: raw ultrasonic tank readings.
+- `flow_p1`, `flow_p2`, `flow_valve1`, `flow_outlet`: controller-side channels
+  from recorded ESP32/MATLAB logs.
+
+The `flow_*` fields are not calibrated physical flow measurements and should
+not be described as flow-sensor data.

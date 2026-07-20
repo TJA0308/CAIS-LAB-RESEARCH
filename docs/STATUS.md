@@ -12,9 +12,22 @@
 - Rule-based anomaly/data-quality reports.
 - Run reports, stage summaries, merged dataset summaries, and cross-run
   comparisons.
-- Generated plots and poster figures from existing pipeline outputs.
+- Generated plots and report figures from existing pipeline outputs.
 - Read-only FastAPI service for run metadata and synchronized timeseries access.
 - Browser replay visualizer with FastAPI-first loading and local CSV fallback.
+
+## Primary Data Products
+
+- `data/db/water_testbed.db`: raw SQLite database with run metadata,
+  ESP32/MATLAB controller-side records, and Arduino tank-sensor records.
+- `exports/*_merged_timeseries.csv`: synchronized one-second replay datasets
+  keyed by `run_name` and `t_seconds`.
+- `analysis/*_anomaly_report.csv` and `analysis/*_anomaly_summary.csv`:
+  data-quality outputs generated from existing records.
+- `analysis/*_run_report.txt` and `analysis/*_stage_summary.csv`: run-level
+  and operating-stage summaries.
+- `plots/*.png`: generated visualizations from the database, merged CSVs, and
+  analysis outputs.
 
 ## Current Demo Run
 
@@ -50,8 +63,9 @@ These runs exist in `runs` but do not currently have matching
   characterization and tank-forecasting experiments.
 - These outputs should not be presented as a validated predictive digital twin,
   autonomous controller, or calibrated physical model.
-- `flow_*` fields should be described as recorded controller-side channels, not
-  calibrated physical flow measurements.
+- `flow_*` fields should be described as recorded controller-side channels from
+  ESP32/MATLAB logs, not calibrated physical flow measurements or flow-sensor
+  data.
 - Tank readings are raw ultrasonic distances, not calibrated volumes.
 
 ## Future Work
@@ -62,4 +76,5 @@ These runs exist in `runs` but do not currently have matching
 - Collect replicated controlled runs for validation.
 - Add live visualization only after the recorded-run workflow is stable.
 - Compare exploratory learned models against first-principles baselines only
-  after sensor and flow calibration are available.
+  after sensor calibration and physical inflow/outflow measurements are
+  available.

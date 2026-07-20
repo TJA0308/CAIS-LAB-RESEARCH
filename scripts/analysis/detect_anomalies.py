@@ -45,7 +45,7 @@ anomalies = []
 # -------------------------------
 
 if not esp32.empty:
-    # Rule 1: Pump 1 command high but Pump 1 flow is low
+    # Rule 1: Pump 1 command high but Pump 1 recorded channel is low
     pump1_low_flow = esp32[
         (esp32["pump1_pwm"] >= 50) &
         (esp32["flow_p1"] <= 0.5)
@@ -60,7 +60,7 @@ if not esp32.empty:
             "details": f"pump1_pwm={row['pump1_pwm']}, flow_p1={row['flow_p1']}"
         })
 
-    # Rule 2: Pump 2 command high but Pump 2 flow is low
+    # Rule 2: Pump 2 command high but Pump 2 recorded channel is low
     pump2_low_flow = esp32[
         (esp32["pump2_pwm"] >= 50) &
         (esp32["flow_p2"] <= 0.5)

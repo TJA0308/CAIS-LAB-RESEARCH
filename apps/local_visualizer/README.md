@@ -48,8 +48,8 @@ What it shows:
 - A sensor-jump warning when tank readings change by more than 300 units between
   consecutive 1-second rows.
 
-This is meant to test the local visualization idea before connecting to a live
-database reader, MQTT stream, or ProtoTwin frontend.
+This is meant to replay recorded runs from the existing merged CSV outputs. It
+does not represent live hardware state.
 
 Current scope:
 
@@ -59,3 +59,10 @@ Current scope:
 - No changes to the existing data collection architecture.
 - Controller-side channel values are not displayed as calibrated physical flow
   measurements.
+
+Data interpretation:
+
+- Pump and valve states are recorded commands from the synchronized run data.
+- Tank bars and traces are raw ultrasonic readings, not calibrated volumes.
+- Channel values use the existing `flow_*` CSV field names but are displayed as
+  controller-side channels, not physical flow-sensor measurements.

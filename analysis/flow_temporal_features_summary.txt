@@ -1,4 +1,4 @@
-Flow-Response Model: Static vs Temporal Features
+Controller-Side Channel Response: Static vs Temporal Features
 ================================================
 Runs (6, leave-one-run-out): full_cycle_run_002, full_cycle_run_003, full_cycle_run_004, pump_pwm_sweep_run_001, pump_pwm_sweep_run_002, valve_routing_run_001
 Static features: pump1_pwm, pump2_pwm, valve1, valve2, valve3, valve4

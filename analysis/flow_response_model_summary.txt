@@ -1,4 +1,4 @@
-Flow Response Model Summary
+Controller-Side Channel Response Model Summary
 ===========================
 
 Task

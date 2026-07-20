@@ -96,27 +96,27 @@ axes[1].grid(True, alpha=0.3)
 axes[2].plot(
     esp32["timestamp"],
     esp32["flow_p1"],
-    label=ESP32_MAPPING.get("flow_p1", "Pump 1 flow")
+    label=ESP32_MAPPING.get("flow_p1", "Pump 1 channel")
 )
 axes[2].plot(
     esp32["timestamp"],
     esp32["flow_p2"],
-    label=ESP32_MAPPING.get("flow_p2", "Pump 2 flow")
+    label=ESP32_MAPPING.get("flow_p2", "Pump 2 channel")
 )
 axes[2].plot(
     esp32["timestamp"],
     esp32["flow_valve1"],
-    label=ESP32_MAPPING.get("flow_valve1", "Valve 1 flow")
+    label=ESP32_MAPPING.get("flow_valve1", "Valve 1 channel")
 )
 axes[2].plot(
     esp32["timestamp"],
     esp32["flow_outlet"],
-    label=ESP32_MAPPING.get("flow_outlet", "Outlet flow")
+    label=ESP32_MAPPING.get("flow_outlet", "Outlet channel")
 )
 
 axes[2].set_xlabel("Time during MATLAB run (s)")
 axes[2].set_ylabel("Flow Reading")
-axes[2].set_title("Flow Response")
+axes[2].set_title("Controller-Side Channel Readings")
 axes[2].legend(loc="upper right")
 axes[2].grid(True, alpha=0.3)
 

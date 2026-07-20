@@ -196,7 +196,7 @@ def write_summary(results, row_counts, rows_dropped):
     )
 
     with open(summary_path, "w", encoding="utf-8") as summary_file:
-        summary_file.write("Flow Response Model Summary\n")
+        summary_file.write("Controller-Side Channel Response Model Summary\n")
         summary_file.write("===========================\n\n")
         summary_file.write("Task\n")
         summary_file.write(

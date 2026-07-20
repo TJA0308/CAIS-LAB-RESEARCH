@@ -1,5 +1,5 @@
 """
-Flow-response model WITH temporal (lag/rolling) features.
+Controller-side channel response model WITH temporal (lag/rolling) features.
 
 The main flow model (`scripts.models.flow_response_model`) uses only instantaneous control
 states. Pump flow has ramp-up transients, so recent control history should help.
@@ -99,7 +99,7 @@ def main():
         results[label] = loro(dataset, feature_columns)
 
     lines = []
-    lines.append("Flow-Response Model: Static vs Temporal Features")
+    lines.append("Controller-Side Channel Response: Static vs Temporal Features")
     lines.append("=" * 48)
     lines.append(f"Runs ({len(runs)}, leave-one-run-out): " + ", ".join(sorted(runs)))
     lines.append(f"Static features: {', '.join(CONTROL_COLUMNS)}")
